@@ -10,8 +10,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
+#include <time.h>
 #include "graphics.h"
+
+#define wall 0
+#define corridorWall 1
+#define floor 2
+#define corridorFloor 3
 
 extern GLubyte  world[WORLDX][WORLDY][WORLDZ];
 
@@ -234,9 +239,16 @@ createTube(2, -xx, -yy, -zz, -xx-((x-xx)*25.0), -yy-((y-yy)*25.0), -zz-((z-zz)*2
 
 
    } else {
-
+/* counter for user defined colour changes */
+      static int colourCount = 0;
+      static GLfloat offset = 0.0;
 	/* your code goes here */
-
+   /* change user defined colour over time */
+      if (colourCount == 1) offset += 0.05;
+      else offset -= 0.01;
+      if (offset >= 0.5) colourCount = 0;
+      if (offset <= 0.0) colourCount = 1;
+      setUserColour(9, 0.7, 0.3 + offset, 0.7, 1.0, 0.3, 0.15 + offset, 0.3, 1.0);
    }
 }
 
@@ -324,10 +336,344 @@ int i, j, k;
    } else {
 
 	/* your code to build the world goes here */
+   int worldLegend[WORLDX][1][WORLDZ];
+   srand((unsigned)time(NULL));
+   setUserColour(9, 0.7, 0.3, 0.7, 1.0, 0.3, 0.15, 0.3, 1.0);
+   
+   int startingPoints[9][2]; // Room 0 is bottom left, room 1 is bottom middle...
+   int roomSizes[9][2];
+   int x, z;
+   for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+         /* generate starting point for each room 
+         x = (rand() % (30)) + 1;
+         z = (rand() % (30)) + 1;
+         x = x + (j * 34);
+         z = z + (i * 34);
+         startingPoints[(3 * j) + i][0] = x;
+         startingPoints[(3 * j) + i][1] = z;
+         */
+         
+         /* generate random room size that fits each of the quadrants */
+         x = (rand() % (30 - 3 + 1)) + 3;
+         z = (rand() % (30 - 3 + 1)) + 3;
+         roomSizes[(3 * j) + i][0] = x;
+         roomSizes[(3 * j) + i][1] = z;
 
+         // select random bottom left corner for each room
+         x = (rand() % ((30 + (34 * j) - roomSizes[(3 * j) + i][0]) - (34 * j) + 1)) + 34 * j;
+         z = (rand() % ((30 + (34 * i) - roomSizes[(3 * j) + i][1]) - (34 * i) + 1)) + 34 * i;
+         startingPoints[(3 * j) + i][0] = x;
+         startingPoints[(3 * j) + i][1] = z;
+      }
+   }
+   
+   for (int j = 0; j < 9; j++) {
+      printf("size: %d-%d Location: %d-%d \n", roomSizes[j][0], roomSizes[j][1], startingPoints[j][0], startingPoints[j][1]); 
+      
+   }
+   
+
+   
+   
+   /* build a red platform */
+   // for(i=0; i<WORLDX; i++) {
+   //    for(j=0; j<WORLDZ; j++) {
+   //       world[i][24][j] = 3;
+   //    }
+   // }
+
+   for(i = 0; i < WORLDX; i++) {
+      for(j = 0; j < WORLDZ; j++) {
+         worldLegend[i][0][j] = -1;
+      }
+   }
+   
+   /* generate walls */
+   for (int i = 0; i < 9; i++) {
+      // build walls along x axis (including corners)
+      for (int j = startingPoints[i][0]; j < (startingPoints[i][0] + roomSizes[i][0] + 2); j++) {
+         for (int k = 0; k < 5; k++) {
+            world[j][25 + k][startingPoints[i][1]] = 9;
+            world[j][25 + k][startingPoints[i][1] + roomSizes[i][1] + 1] = 9;
+         }
+         if (j > startingPoints[i][0] && j < (startingPoints[i][0] + roomSizes[i][0] + 1)) {
+            for (int k = startingPoints[i][1] + 1; k < (startingPoints[i][1] + roomSizes[i][1] + 1); k++) {
+               worldLegend[j][0][k] = floor;
+            }
+         }
+      }
+      // build walls along z axis
+      for (int j = startingPoints[i][1] + 1; j < (startingPoints[i][1] + roomSizes[i][1] + 1); j++) {
+         for (int k = 0; k < 5; k++) {
+            world[startingPoints[i][0]][25 + k][j] = 9;
+            world[startingPoints[i][0] + roomSizes[i][0] + 1][25 + k][j] = 9;            
+         }
+      }
+   }
+   
+   /* generate corridors that connect the doorways along z axis*/
+   for (int i = 1; i < 7; i++) {
+      // generate corridors along z axis
+      int firstRoom = ((double)(0.25 * (pow(-1,i))) * ((6 * (pow(-1,i)) * i - 7 * (pow(-1,i)) - 1))); // corridor on right side (pattern: 0,1,3,4,6,7)
+      int secondRoom = ((double)(0.25 * (pow(-1,i))) * ((6 * (pow(-1,i)) * i - 7 * (pow(-1,i)) - 1))) + 1; // corridor on left side (pattern: 1,2,4,5,7,8)
+      printf("frist: %d second: %d\n", firstRoom, secondRoom);
+      // select right facing corridor openings
+      int rand1 = rand () % (roomSizes[firstRoom][0] - 1);
+      for (int k = 0; k < 5; k++) {
+         world[rand1 + startingPoints[firstRoom][0] + 1][25 + k][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = 0; 
+         world[rand1 + startingPoints[firstRoom][0] + 2][25 + k][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = 0;
+      }
+      worldLegend[rand1 + startingPoints[firstRoom][0] + 1][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = corridorFloor; 
+      worldLegend[rand1 + startingPoints[firstRoom][0] + 2][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = corridorFloor;
+
+      // select left facing corridor openings
+      int rand2 = rand () % (roomSizes[secondRoom][0] - 1);
+      for (int k = 0; k < 5; k++) {
+         world[rand2 + startingPoints[secondRoom][0] + 1][25 + k][startingPoints[secondRoom][1]] = 0; 
+         world[rand2 + startingPoints[secondRoom][0] + 2][25 + k][startingPoints[secondRoom][1]] = 0;
+      }
+      worldLegend[rand2 + startingPoints[secondRoom][0] + 1][0][startingPoints[secondRoom][1]] = corridorFloor; 
+      worldLegend[rand2 + startingPoints[secondRoom][0] + 2][0][startingPoints[secondRoom][1]] = corridorFloor;
+
+      // select random location between both doorways to insert connecting corridor
+      int yDistBetween = (startingPoints[secondRoom][1]) - (startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1) - 1;
+      
+      int randDist = rand () % (yDistBetween - 1); // choose where the connecting corridor starts
+      // build corridor until join
+      for (int i = 0; i < randDist; i++) {
+         int x = rand1 + startingPoints[firstRoom][0];
+         int z = startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + i;
+         worldLegend[x][0][z] = worldLegend[x][0][z] == corridorFloor ? corridorFloor : corridorWall;
+         worldLegend[x + 1][0][z] = corridorFloor;
+         worldLegend[x + 2][0][z] = corridorFloor;
+         worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == corridorFloor ? corridorFloor : corridorWall;
+      }
+      // build join
+      if ((rand1 + startingPoints[firstRoom][0]) < (rand2 + startingPoints[secondRoom][0])) { // if left door lower than right door
+         int xDistBetween = (rand2 + startingPoints[secondRoom][0]) - (rand1 + startingPoints[firstRoom][0]);
+         // build top/bottom of join
+         for (int j = 0; j < 3; j++) {
+            if ((randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j) < startingPoints[secondRoom][1]) {
+               if (worldLegend[rand1 + startingPoints[firstRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] != corridorFloor) {
+                  worldLegend[rand1 + startingPoints[firstRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] = corridorWall;
+               }
+            }
+            if ((randDist + j) > 0 ) {
+               if (worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] != corridorFloor) {
+                  worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] = corridorWall;
+               }
+            }
+         }
+         // build sides of join
+         for (int i = 0; i < xDistBetween + 4; i++) {
+            // left side
+            if (i > 2) {
+               if (worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] != corridorFloor) {
+                  worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] = corridorWall;
+               }
+            }
+            // right side
+            if (i < xDistBetween + 1) {
+               if (worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] != corridorFloor) {
+                  worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] = corridorWall;
+               }
+            }
+            // floor
+            if (i > 0 && i < xDistBetween + 3) {
+               worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + randDist] = corridorFloor;
+               worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 3 + randDist] = corridorFloor;
+            }
+         }
+      } else { // if right door is lower or equal to left door
+         int xDistBetween = (rand1 + startingPoints[firstRoom][0]) - (rand2 + startingPoints[secondRoom][0]);
+         // build top/bottom of join
+         for (int j = 0; j < 3; j++) {
+            if ((randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j) < startingPoints[secondRoom][1]) {
+               if (worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] != corridorFloor) {
+                  worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] = corridorWall;
+               }
+            }
+            if ((randDist + j) > 0 ) {
+               if (worldLegend[rand2 + startingPoints[secondRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] != corridorFloor) {
+                  worldLegend[rand2 + startingPoints[secondRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] = corridorWall;
+               }
+            }
+         }
+         // build sides of join
+         for (int i = 0; i < xDistBetween + 4; i++) {
+            // left side
+            if (i < xDistBetween + 1) {
+               if (worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] != corridorFloor) {
+                  worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] = corridorWall;
+               }
+            }
+            // right side
+            if (i > 2) {
+               if (worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] != corridorFloor) {
+                  worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] = corridorWall;
+               }
+            }
+            // floor 
+            if (i > 0 && i < xDistBetween + 3) {
+               worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + randDist] = corridorFloor;
+               worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 3 + randDist] = corridorFloor;
+            }
+         }
+      }
+      // build corridor after join
+      for (int i = 1; i < yDistBetween - randDist - 1; i++) {
+         int x = rand2 + startingPoints[secondRoom][0];
+         int z = startingPoints[secondRoom][1] - i;
+         worldLegend[x][0][z] = worldLegend[x][0][z] == corridorFloor ? corridorFloor : corridorWall;
+         worldLegend[x + 1][0][z] = corridorFloor;
+         worldLegend[x + 2][0][z] = corridorFloor;
+         worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == corridorFloor ? corridorFloor : corridorWall;
+      }
    }
 
+   /* generate corridors that connect the doorways along x axis */
+   for (int i = 0; i < 6; i++) {
+      // generate corridors along x axis
+      int firstRoom = i; // corridor on bottom 
+      int secondRoom = i + 3; // corridor on top
 
+      // select up facing corridor openings
+      int rand1 = rand () % (roomSizes[firstRoom][1] - 1);
+      for (int k = 0; k < 5; k++) {
+         world[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][25 + k][rand1 + startingPoints[firstRoom][1] + 1] = 0; 
+         world[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][25 + k][rand1 + startingPoints[firstRoom][1] + 2] = 0;
+      }
+      worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 1] = corridorFloor; 
+      worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 2] = corridorFloor;
+      // select down facing corridor openings
+      int rand2 = rand () % (roomSizes[secondRoom][1] - 1);
+      for (int k = 0; k < 5; k++) {
+         world[startingPoints[secondRoom][0]][25 + k][rand2 + startingPoints[secondRoom][1] + 1] = 0; 
+         world[startingPoints[secondRoom][0]][25 + k][rand2 + startingPoints[secondRoom][1] + 2] = 0;
+      }
+      worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 1] = corridorFloor; 
+      worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 2] = corridorFloor;
+
+      // select random location between both doorways to insert connecting corridor
+      int yDistBetween = (startingPoints[secondRoom][0]) - (startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1) - 1;
+      
+      int randDist = rand () % (yDistBetween - 1); // choose where the connecting corridor starts
+      // build corridor until join
+      for (int i = 0; i < randDist; i++) {
+         int x = startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + i;
+         int z = rand1 + startingPoints[firstRoom][1];
+         worldLegend[x][0][z] = worldLegend[x][0][z] == corridorFloor ? corridorFloor : corridorWall;
+         worldLegend[x][0][z + 1] = corridorFloor;
+         worldLegend[x][0][z + 2] = corridorFloor;
+         worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == corridorFloor ? corridorFloor : corridorWall;
+      }
+
+      // build join
+      if ((rand1 + startingPoints[firstRoom][1]) < (rand2 + startingPoints[secondRoom][1])) { // if bottom door lower (z val) than top door
+         int xDistBetween = (rand2 + startingPoints[secondRoom][1]) - (rand1 + startingPoints[firstRoom][1]);
+         // build right/left of join
+         for (int j = 0; j < 3; j++) {
+            if ((randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j) < startingPoints[secondRoom][0]) {
+               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1]] != corridorFloor) {
+                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1]] = corridorWall;
+               }
+            }
+            if ((randDist + j) > 0 ) {
+               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1] + 3] != corridorFloor) {
+                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1] + 3] = corridorWall;
+               }
+            }
+         }
+         // build sides of join
+         for (int i = 0; i < xDistBetween + 4; i++) {
+            // bottom side
+            if (i > 2) {
+               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] != corridorFloor) {
+                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = corridorWall;
+               }
+            }
+            // top side
+            if (i < xDistBetween + 1) {
+               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] != corridorFloor) {
+                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = corridorWall;
+               }
+            }
+            // floor
+            if (i > 0 && i < xDistBetween + 3) {
+               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = corridorFloor;
+               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 3 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = corridorFloor;
+            }
+         }
+      } else { // if top door is lower (z val) or equal to bottom door
+         int xDistBetween = (rand1 + startingPoints[firstRoom][1]) - (rand2 + startingPoints[secondRoom][1]);
+         // build left/right of join
+         for (int j = 0; j < 3; j++) {
+            if ((randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j) < startingPoints[secondRoom][0]) {
+               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1] + 3] != corridorFloor) {
+                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1] + 3] = corridorWall;
+               }
+            }
+            if ((randDist + j) > 0 ) {
+               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1]] != corridorFloor) {
+                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1]] = corridorWall;
+               }
+            }
+         }
+         // build side of join
+         for (int i = 0; i < xDistBetween + 4; i++) {
+            // bottom side
+            if (i < xDistBetween + 1) {
+               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] != corridorFloor) {
+                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = corridorWall;
+               }
+            }
+            // top side
+            if (i > 2) {
+               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] != corridorFloor) {
+                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = corridorWall;
+               }
+            }
+            // floor
+            if (i < xDistBetween + 3 && i > 0) {
+               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = corridorFloor;
+               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 3 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = corridorFloor;
+            }
+         }
+      }
+      // build corridor after join
+      for (int i = 1; i < yDistBetween - randDist - 1; i++) {
+         int x = startingPoints[secondRoom][0] - i;
+         int z = rand2 + startingPoints[secondRoom][1];
+         worldLegend[x][0][z] = worldLegend[x][0][z] == corridorFloor ? corridorFloor : corridorWall;
+         worldLegend[x][0][z + 1] = corridorFloor;
+         worldLegend[x][0][z + 2] = corridorFloor;
+         worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == corridorFloor ? corridorFloor : corridorWall;
+      }
+   }
+   setViewPosition(-50, -120, -50);
+   setViewOrientation(90,90,0);
+   world[0][24][0] = 9;
+   world[0][24][2] = 9;
+   
+   // build items from legend
+   for (int i = 0; i < WORLDX; i++) {
+      for (int j = 0; j < WORLDZ; j++) {
+         if (worldLegend[i][0][j] == corridorWall || worldLegend[i][0][j] == wall) {
+            for (k = 0; k < 5; k++) {
+               world[i][25 + k][j] = 9;
+            }
+         }
+         if (worldLegend[i][0][j] == corridorFloor) {
+            world[i][29][j] = 3;
+         }
+         if (worldLegend[i][0][j] == floor) {
+            world[i][29][j] = 4;
+         }     
+      }
+   }
+
+   }
 	/* starts the graphics processing loop */
 	/* code after this will not run until the program exits */
    glutMainLoop();

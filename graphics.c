@@ -53,8 +53,8 @@ GLfloat viewpointLight[] = {-50.0, -50.0, -50.0, 1.0};
 float skySize;
 
 	/* screen dimensions */
-int screenWidth = 1024;
-int screenHeight = 768;
+int screenWidth = 1920;
+int screenHeight = 1080;
 
 	/* command line flags */
 int flycontrol = 1;		// allow viewpoint to move in y axis when 1
@@ -734,11 +734,11 @@ static int lighton = 1;
          oldvpz = vpz;
          rotx = (mvx / 180.0 * 3.141592);
          roty = (mvy / 180.0 * 3.141592);
-         vpx -= sin(roty) * 0.3;
+         vpx -= sin(roty) * 0.6;
 		// turn off y motion so you can't fly
          if (flycontrol == 1)
             vpy += sin(rotx) * 0.3;
-         vpz += cos(roty) * 0.3;
+         vpz += cos(roty) * 0.6;
 	 collisionResponse();
          glutPostRedisplay();
          break;
