@@ -57,7 +57,7 @@ int screenWidth = 1920;
 int screenHeight = 1080;
 
 	/* command line flags */
-int flycontrol = 1;		// allow viewpoint to move in y axis when 1
+int flycontrol = 0;		// allow viewpoint to move in y axis when 1
 int displayAllCubes = 0;	// draw all of the cubes in the world when 1
 int testWorld = 0;		// sample world for timing tests
 int fps = 0;			// turn on frame per second output
@@ -734,11 +734,11 @@ static int lighton = 1;
          oldvpz = vpz;
          rotx = (mvx / 180.0 * 3.141592);
          roty = (mvy / 180.0 * 3.141592);
-         vpx -= sin(roty) * 0.6;
+         vpx -= sin(roty) * 0.3;
 		// turn off y motion so you can't fly
          if (flycontrol == 1)
             vpy += sin(rotx) * 0.3;
-         vpz += cos(roty) * 0.6;
+         vpz += cos(roty) * 0.3;
 	 collisionResponse();
          glutPostRedisplay();
          break;
@@ -920,7 +920,7 @@ int i, fullscreen;
        skySize = (float) WORLDY;
    if (WORLDZ > skySize)
        skySize = (float) WORLDZ;
-   skySize *= 2.0;
+   skySize *= 4.0;
 }
 
 	/* functions to draw 2d images on screen */

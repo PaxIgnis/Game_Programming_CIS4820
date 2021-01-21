@@ -13,10 +13,10 @@
 #include <time.h>
 #include "graphics.h"
 
-#define wall 0
-#define corridorWall 1
-#define floor 2
-#define corridorFloor 3
+#define WALL 0
+#define CORRIDORWALL 1
+#define FLOOR 2
+#define CORRIDORFLOOR 3
 
 extern GLubyte  world[WORLDX][WORLDY][WORLDZ];
 
@@ -110,6 +110,148 @@ extern void getUserColour(int, GLfloat *, GLfloat *, GLfloat *, GLfloat *,
 void collisionResponse() {
 
 	/* your code for collisions goes here */
+   float x, y, z;
+   float xx, yy, zz;
+   float alp1, alp2, alp3, a2, a3, u, v, RHS1, RHS2, newx, newz;
+
+   getViewPosition(&x, &y, &z);
+   getOldViewPosition(&xx, &yy, &zz);
+   x=-x;
+   z=-z;
+   xx=-xx;
+   zz=-zz;
+   float z2Array[4] = {z,z,zz,zz};
+   float z1Array[4] = {zz,zz,z,z};
+   float x1Array[4] = {xx,xx,x,x};
+   float x2Array[4] = {x,x,xx,xx};
+   float alp1Array[4] = {45.0,22.5,78.75,67.5};
+   float alp2Array[4] = {67.5,78.75,22.5,45.0};
+
+   for (int i = 0; i < 5; i++) {
+      
+      int deg = (int)(450.0 + atan2f(z-(zz), x-(xx)) * (180.0 / 3.14159265)) % 360;
+      if (i == 4) {
+         newx = x;
+         newz = z;
+      } else {
+         float x1 = x1Array[i];
+         float x2 = x2Array[i];
+         float z1 = z1Array[i];
+         float z2 = z2Array[i];
+         float alp1Angle = alp1Array[i];
+         float alp2Angle = alp2Array[i];
+         alp1 = (3.141592 / 180.0) * alp1Angle;
+         alp2 = (3.141592 / 180.0) * alp2Angle;
+         u = x2 - x1;
+         v = z2 - z1;
+         a3 = sqrt(pow(u, 2) + pow(v, 2));
+         alp3 = 3.141592 - alp1 - alp2;
+         a2 = a3*sin(alp2)/sin(alp3);
+         RHS1 = x1*u + z1*v + a2*a3*cos(alp1);
+         RHS2 = z2*u - x2*v - a2*a3*sin(alp1);
+         newx = (1/pow(a3, 2))*(u*RHS1-v*RHS2);
+         newz = (1/pow(a3, 2))*(v*RHS1+u*RHS2);
+         
+         printf("%f %f %f %f %f %f %f %f %f %f %f \n", alp1, alp2, alp3, a2, a3, u, v, RHS1, RHS2, newx, newz);
+         printf("%f %f %f %f %f %f %d\n", x1,z1,x2,z2,newx,newz, deg);
+      }
+      printf("xx: %f zz: %f newx: %f newz: %f x: %f z: %f\n", xx,zz,newx, newz,  xx-((-newx+xx)*2), zz-((-newz+zz)*2));
+      //float dist = fabs(sqrt(pow(newx - xx,2)+pow(newz - zz,2)));
+      float dist = fabs(sqrt(pow(xx-((-newx+xx)*2) - xx,2)+pow(zz-((-newz+zz)*2) - zz,2)));
+      printf("dist: %f\n", dist);
+      createTube(1, xx, -yy, zz, xx-((-newx+xx)*8), -yy, zz-((-newz+zz)*8), 6);
+      if (world[(int)floor(xx-((-newx+xx)*2))][(int)floor(-yy)][(int)floor(zz-((-newz+zz)*2))] != 0) {
+         // prevent 'sticking' to walls
+         
+         if (deg >= 45 && deg < 135) {
+            if (world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
+               x = xx + dist;
+               z = zz;
+            } else if (deg >= 90 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
+               x = xx;
+               z = zz + dist;
+            } else if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
+               x = xx;
+               z = zz - dist;
+            } else {
+               x = xx;
+               z = zz;
+            }
+         } else if (deg >= 135 && deg < 225) {
+            if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
+               x = xx;
+               z = zz + dist;
+            } else if (deg >= 180 && world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
+               x = xx - dist;
+               z = zz;
+            } else if (world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
+               x = xx + dist;
+               z = zz;
+            } else {
+               x = xx;
+               z = zz;
+            }
+         } else if (deg >= 225 && deg < 315) {
+            if (world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
+               x = xx - dist;
+               z = zz;
+            } else if (deg >= 270 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
+               x = xx;
+               z = zz - dist;
+            } else if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
+               x = xx;
+               z = zz + dist;
+            } else {
+               x = xx;
+               z = zz;
+            }
+         } else {
+            if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
+               x = xx;
+               z = zz - dist;
+            } else if (deg >= 0 && world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
+               x = xx + dist;
+               z = zz;
+            } else if (world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
+               x = xx - dist;
+               z = zz;
+            } else {
+               x = xx;
+               z = zz;
+            }
+         }
+
+         if (world[(int)floor(x)][(int)floor(-yy)][(int)floor(z)] == 0) {
+            setViewPosition(-x,yy,-z);
+            printf("blocked and slide\n");
+         } else {
+            setViewPosition(-xx, yy, -zz);
+            printf("blocked\n");
+         }
+         
+         
+         break;
+      }      
+   }
+   
+   // float xNew, yNew, zNew;
+
+   // getOldViewPosition(&x, &y, &z);
+   // getViewPosition(&xNew, &yNew, &zNew);
+   // xNew = -1 * xNew;
+   // yNew = -1 * yNew;
+   // zNew = -1 * zNew;
+
+   // if (world[(int)floor(xNew)][(int)floor(yNew)][(int)floor(zNew)] != 0) {
+   //    setViewPosition(x, y, z);
+   // }
+   //setViewOrientation(0.0, 0.0, 0.0);
+   // getViewPosition(&x, &y, &z);
+   // getOldViewPosition(&xx, &yy, &zz);
+   
+   // if (world[(int)floor(-xx-((x-xx)*2.0))][(int)floor(-yy-((y-yy)*2.0))][(int)floor(-zz-((z-zz)*2.0))] != 0) {
+   //    setViewPosition(xx, yy, zz);
+   // }
 
 }
 
@@ -239,16 +381,73 @@ createTube(2, -xx, -yy, -zz, -xx-((x-xx)*25.0), -yy-((y-yy)*25.0), -zz-((z-zz)*2
 
 
    } else {
-/* counter for user defined colour changes */
+      /* counter for user defined colour changes */
       static int colourCount = 0;
       static GLfloat offset = 0.0;
-	/* your code goes here */
-   /* change user defined colour over time */
+	   /* your code goes here */
+      /* change user defined colour over time */
       if (colourCount == 1) offset += 0.05;
       else offset -= 0.01;
       if (offset >= 0.5) colourCount = 0;
       if (offset <= 0.0) colourCount = 1;
       setUserColour(9, 0.7, 0.3 + offset, 0.7, 1.0, 0.3, 0.15 + offset, 0.3, 1.0);
+
+/* 
+      float x, y, z;
+      float xNew, yNew, zNew;
+      float mvx, mvy, mvz;
+      float rotx, roty, rotz;
+
+      getOldViewPosition(&x, &y, &z);
+      getViewPosition(&xNew, &yNew, &zNew);
+      xNew = -1 * xNew;
+      yNew = -1 * yNew;
+      zNew = -1 * zNew;
+      getViewOrientation(&mvx, &mvy, &mvz);
+      rotx = (mvx / 180.0 * 3.141592);
+      roty = (mvy / 180.0 * 3.141592);
+
+      float xx, yy, zz;
+      getViewPosition(&x, &y, &z);
+      getOldViewPosition(&xx, &yy, &zz); */
+
+
+      // vpx -= sin(roty) * 0.3;
+		// // turn off y motion so you can't fly
+      //    if (flycontrol == 1)
+      //       vpy += sin(rotx) * 0.3;
+      //    vpz += cos(roty) * 0.3;
+
+
+      // printf("%f %f %f %f %f %f\n", xx, yy, zz, x, y, z);
+      // printf("%f %f %f\n",  -xx+((x-xx)*25.0), -yy+((y-yy)*25.0), -zz+((z-zz)*25.0));
+      //createTube(2, -xx, -yy, -zz, -(-x - sin(mvy)), -yy-((y-yy)*4.0), -(-z + cos(mvy)), 2);
+      //createTube(2, -xx, -yy, -zz, -xx-((x-xx)*2.0) + 3, -yy-((y-yy)*2.0), -zz-((z-zz)*2.0), 3);
+      
+      //printf("mvx: %lf mvy: %lf mvz: %lf rotx: %lf roty: %lf\n", mvx, mvy, mvz, rotx, roty);
+/* 
+      float deg = 450.0 + atan2f(-z-(-zz), -x-(-xx)) * (180.0 / 3.14159265);
+      //printf("degrees y: %d  atan: %f  y: %f, yy: %f, x: %f, xx: %f, negDeg: %d\n", (int)mvy % 360, deg,-z,-zz,-x,-xx, (int)deg % 360);
+      if (world[(int)floor(-xx-((x-xx)*2.0))][(int)floor(-yy-((y-yy)*2.0))][(int)floor(-zz-((z-zz)*2.0))] != 0) {
+         setViewPosition(xx, yy, zz);
+      }
+
+      float ox, oy, oz, nx, ny, nz, vox, voy, voz;
+      getViewPosition(&nx, &ny, &nz);
+      getOldViewPosition(&ox, &oy, &oz);
+      getViewOrientation(&vox, &voy, &voz);
+      rotx = (vox / 180.0 * 3.141592);
+      roty = (voy / 180.0 * 3.141592);
+      nx -= sin(roty) * .01;
+      ny += sin(rotx);
+      nz += cos(roty); */
+
+      //createTube(2, -ox, -oy, -oz, -nx, -ny, -nz, 2);
+
+      // if (world[(int)floor(-nx)][(int)floor(-ny)][(int)floor(-nz)] != 0) {
+      //    setViewPosition(xx, yy, zz);
+      // }
+
    }
 }
 
@@ -394,20 +593,20 @@ int i, j, k;
       // build walls along x axis (including corners)
       for (int j = startingPoints[i][0]; j < (startingPoints[i][0] + roomSizes[i][0] + 2); j++) {
          for (int k = 0; k < 5; k++) {
-            world[j][25 + k][startingPoints[i][1]] = 9;
-            world[j][25 + k][startingPoints[i][1] + roomSizes[i][1] + 1] = 9;
+            world[j][25 + k][startingPoints[i][1]] = 7;
+            world[j][25 + k][startingPoints[i][1] + roomSizes[i][1] + 1] = 7;
          }
          if (j > startingPoints[i][0] && j < (startingPoints[i][0] + roomSizes[i][0] + 1)) {
             for (int k = startingPoints[i][1] + 1; k < (startingPoints[i][1] + roomSizes[i][1] + 1); k++) {
-               worldLegend[j][0][k] = floor;
+               worldLegend[j][0][k] = FLOOR;
             }
          }
       }
       // build walls along z axis
       for (int j = startingPoints[i][1] + 1; j < (startingPoints[i][1] + roomSizes[i][1] + 1); j++) {
          for (int k = 0; k < 5; k++) {
-            world[startingPoints[i][0]][25 + k][j] = 9;
-            world[startingPoints[i][0] + roomSizes[i][0] + 1][25 + k][j] = 9;            
+            world[startingPoints[i][0]][25 + k][j] = 7;
+            world[startingPoints[i][0] + roomSizes[i][0] + 1][25 + k][j] = 7; 
          }
       }
    }
@@ -424,8 +623,8 @@ int i, j, k;
          world[rand1 + startingPoints[firstRoom][0] + 1][25 + k][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = 0; 
          world[rand1 + startingPoints[firstRoom][0] + 2][25 + k][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = 0;
       }
-      worldLegend[rand1 + startingPoints[firstRoom][0] + 1][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = corridorFloor; 
-      worldLegend[rand1 + startingPoints[firstRoom][0] + 2][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = corridorFloor;
+      worldLegend[rand1 + startingPoints[firstRoom][0] + 1][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = CORRIDORFLOOR; 
+      worldLegend[rand1 + startingPoints[firstRoom][0] + 2][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = CORRIDORFLOOR;
 
       // select left facing corridor openings
       int rand2 = rand () % (roomSizes[secondRoom][0] - 1);
@@ -433,8 +632,8 @@ int i, j, k;
          world[rand2 + startingPoints[secondRoom][0] + 1][25 + k][startingPoints[secondRoom][1]] = 0; 
          world[rand2 + startingPoints[secondRoom][0] + 2][25 + k][startingPoints[secondRoom][1]] = 0;
       }
-      worldLegend[rand2 + startingPoints[secondRoom][0] + 1][0][startingPoints[secondRoom][1]] = corridorFloor; 
-      worldLegend[rand2 + startingPoints[secondRoom][0] + 2][0][startingPoints[secondRoom][1]] = corridorFloor;
+      worldLegend[rand2 + startingPoints[secondRoom][0] + 1][0][startingPoints[secondRoom][1]] = CORRIDORFLOOR; 
+      worldLegend[rand2 + startingPoints[secondRoom][0] + 2][0][startingPoints[secondRoom][1]] = CORRIDORFLOOR;
 
       // select random location between both doorways to insert connecting corridor
       int yDistBetween = (startingPoints[secondRoom][1]) - (startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1) - 1;
@@ -444,10 +643,10 @@ int i, j, k;
       for (int i = 0; i < randDist; i++) {
          int x = rand1 + startingPoints[firstRoom][0];
          int z = startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + i;
-         worldLegend[x][0][z] = worldLegend[x][0][z] == corridorFloor ? corridorFloor : corridorWall;
-         worldLegend[x + 1][0][z] = corridorFloor;
-         worldLegend[x + 2][0][z] = corridorFloor;
-         worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == corridorFloor ? corridorFloor : corridorWall;
+         worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : CORRIDORWALL;
+         worldLegend[x + 1][0][z] = CORRIDORFLOOR;
+         worldLegend[x + 2][0][z] = CORRIDORFLOOR;
+         worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : CORRIDORWALL;
       }
       // build join
       if ((rand1 + startingPoints[firstRoom][0]) < (rand2 + startingPoints[secondRoom][0])) { // if left door lower than right door
@@ -455,13 +654,13 @@ int i, j, k;
          // build top/bottom of join
          for (int j = 0; j < 3; j++) {
             if ((randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j) < startingPoints[secondRoom][1]) {
-               if (worldLegend[rand1 + startingPoints[firstRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] != corridorFloor) {
-                  worldLegend[rand1 + startingPoints[firstRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] = corridorWall;
+               if (worldLegend[rand1 + startingPoints[firstRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] != CORRIDORFLOOR) {
+                  worldLegend[rand1 + startingPoints[firstRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] = CORRIDORWALL;
                }
             }
             if ((randDist + j) > 0 ) {
-               if (worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] != corridorFloor) {
-                  worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] = corridorWall;
+               if (worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] != CORRIDORFLOOR) {
+                  worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] = CORRIDORWALL;
                }
             }
          }
@@ -469,20 +668,20 @@ int i, j, k;
          for (int i = 0; i < xDistBetween + 4; i++) {
             // left side
             if (i > 2) {
-               if (worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] != corridorFloor) {
-                  worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] = corridorWall;
+               if (worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] != CORRIDORFLOOR) {
+                  worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] = CORRIDORWALL;
                }
             }
             // right side
             if (i < xDistBetween + 1) {
-               if (worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] != corridorFloor) {
-                  worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] = corridorWall;
+               if (worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] != CORRIDORFLOOR) {
+                  worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] = CORRIDORWALL;
                }
             }
-            // floor
+            // FLOOR
             if (i > 0 && i < xDistBetween + 3) {
-               worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + randDist] = corridorFloor;
-               worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 3 + randDist] = corridorFloor;
+               worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + randDist] = CORRIDORFLOOR;
+               worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 3 + randDist] = CORRIDORFLOOR;
             }
          }
       } else { // if right door is lower or equal to left door
@@ -490,13 +689,13 @@ int i, j, k;
          // build top/bottom of join
          for (int j = 0; j < 3; j++) {
             if ((randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j) < startingPoints[secondRoom][1]) {
-               if (worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] != corridorFloor) {
-                  worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] = corridorWall;
+               if (worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] != CORRIDORFLOOR) {
+                  worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] = CORRIDORWALL;
                }
             }
             if ((randDist + j) > 0 ) {
-               if (worldLegend[rand2 + startingPoints[secondRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] != corridorFloor) {
-                  worldLegend[rand2 + startingPoints[secondRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] = corridorWall;
+               if (worldLegend[rand2 + startingPoints[secondRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] != CORRIDORFLOOR) {
+                  worldLegend[rand2 + startingPoints[secondRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] = CORRIDORWALL;
                }
             }
          }
@@ -504,20 +703,20 @@ int i, j, k;
          for (int i = 0; i < xDistBetween + 4; i++) {
             // left side
             if (i < xDistBetween + 1) {
-               if (worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] != corridorFloor) {
-                  worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] = corridorWall;
+               if (worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] != CORRIDORFLOOR) {
+                  worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] = CORRIDORWALL;
                }
             }
             // right side
             if (i > 2) {
-               if (worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] != corridorFloor) {
-                  worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] = corridorWall;
+               if (worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] != CORRIDORFLOOR) {
+                  worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] = CORRIDORWALL;
                }
             }
-            // floor 
+            // FLOOR 
             if (i > 0 && i < xDistBetween + 3) {
-               worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + randDist] = corridorFloor;
-               worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 3 + randDist] = corridorFloor;
+               worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + randDist] = CORRIDORFLOOR;
+               worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 3 + randDist] = CORRIDORFLOOR;
             }
          }
       }
@@ -525,10 +724,10 @@ int i, j, k;
       for (int i = 1; i < yDistBetween - randDist - 1; i++) {
          int x = rand2 + startingPoints[secondRoom][0];
          int z = startingPoints[secondRoom][1] - i;
-         worldLegend[x][0][z] = worldLegend[x][0][z] == corridorFloor ? corridorFloor : corridorWall;
-         worldLegend[x + 1][0][z] = corridorFloor;
-         worldLegend[x + 2][0][z] = corridorFloor;
-         worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == corridorFloor ? corridorFloor : corridorWall;
+         worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : CORRIDORWALL;
+         worldLegend[x + 1][0][z] = CORRIDORFLOOR;
+         worldLegend[x + 2][0][z] = CORRIDORFLOOR;
+         worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : CORRIDORWALL;
       }
    }
 
@@ -544,16 +743,16 @@ int i, j, k;
          world[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][25 + k][rand1 + startingPoints[firstRoom][1] + 1] = 0; 
          world[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][25 + k][rand1 + startingPoints[firstRoom][1] + 2] = 0;
       }
-      worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 1] = corridorFloor; 
-      worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 2] = corridorFloor;
+      worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 1] = CORRIDORFLOOR; 
+      worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 2] = CORRIDORFLOOR;
       // select down facing corridor openings
       int rand2 = rand () % (roomSizes[secondRoom][1] - 1);
       for (int k = 0; k < 5; k++) {
          world[startingPoints[secondRoom][0]][25 + k][rand2 + startingPoints[secondRoom][1] + 1] = 0; 
          world[startingPoints[secondRoom][0]][25 + k][rand2 + startingPoints[secondRoom][1] + 2] = 0;
       }
-      worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 1] = corridorFloor; 
-      worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 2] = corridorFloor;
+      worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 1] = CORRIDORFLOOR; 
+      worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 2] = CORRIDORFLOOR;
 
       // select random location between both doorways to insert connecting corridor
       int yDistBetween = (startingPoints[secondRoom][0]) - (startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1) - 1;
@@ -563,10 +762,10 @@ int i, j, k;
       for (int i = 0; i < randDist; i++) {
          int x = startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + i;
          int z = rand1 + startingPoints[firstRoom][1];
-         worldLegend[x][0][z] = worldLegend[x][0][z] == corridorFloor ? corridorFloor : corridorWall;
-         worldLegend[x][0][z + 1] = corridorFloor;
-         worldLegend[x][0][z + 2] = corridorFloor;
-         worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == corridorFloor ? corridorFloor : corridorWall;
+         worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : CORRIDORWALL;
+         worldLegend[x][0][z + 1] = CORRIDORFLOOR;
+         worldLegend[x][0][z + 2] = CORRIDORFLOOR;
+         worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : CORRIDORWALL;
       }
 
       // build join
@@ -575,13 +774,13 @@ int i, j, k;
          // build right/left of join
          for (int j = 0; j < 3; j++) {
             if ((randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j) < startingPoints[secondRoom][0]) {
-               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1]] != corridorFloor) {
-                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1]] = corridorWall;
+               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1]] != CORRIDORFLOOR) {
+                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1]] = CORRIDORWALL;
                }
             }
             if ((randDist + j) > 0 ) {
-               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1] + 3] != corridorFloor) {
-                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1] + 3] = corridorWall;
+               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1] + 3] != CORRIDORFLOOR) {
+                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1] + 3] = CORRIDORWALL;
                }
             }
          }
@@ -589,20 +788,20 @@ int i, j, k;
          for (int i = 0; i < xDistBetween + 4; i++) {
             // bottom side
             if (i > 2) {
-               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] != corridorFloor) {
-                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = corridorWall;
+               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] != CORRIDORFLOOR) {
+                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = CORRIDORWALL;
                }
             }
             // top side
             if (i < xDistBetween + 1) {
-               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] != corridorFloor) {
-                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = corridorWall;
+               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] != CORRIDORFLOOR) {
+                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = CORRIDORWALL;
                }
             }
-            // floor
+            // FLOOR
             if (i > 0 && i < xDistBetween + 3) {
-               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = corridorFloor;
-               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 3 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = corridorFloor;
+               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = CORRIDORFLOOR;
+               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 3 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = CORRIDORFLOOR;
             }
          }
       } else { // if top door is lower (z val) or equal to bottom door
@@ -610,13 +809,13 @@ int i, j, k;
          // build left/right of join
          for (int j = 0; j < 3; j++) {
             if ((randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j) < startingPoints[secondRoom][0]) {
-               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1] + 3] != corridorFloor) {
-                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1] + 3] = corridorWall;
+               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1] + 3] != CORRIDORFLOOR) {
+                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1] + 3] = CORRIDORWALL;
                }
             }
             if ((randDist + j) > 0 ) {
-               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1]] != corridorFloor) {
-                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1]] = corridorWall;
+               if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1]] != CORRIDORFLOOR) {
+                  worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1]] = CORRIDORWALL;
                }
             }
          }
@@ -624,20 +823,20 @@ int i, j, k;
          for (int i = 0; i < xDistBetween + 4; i++) {
             // bottom side
             if (i < xDistBetween + 1) {
-               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] != corridorFloor) {
-                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = corridorWall;
+               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] != CORRIDORFLOOR) {
+                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = CORRIDORWALL;
                }
             }
             // top side
             if (i > 2) {
-               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] != corridorFloor) {
-                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = corridorWall;
+               if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] != CORRIDORFLOOR) {
+                  worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = CORRIDORWALL;
                }
             }
-            // floor
+            // FLOOR
             if (i < xDistBetween + 3 && i > 0) {
-               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = corridorFloor;
-               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 3 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = corridorFloor;
+               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = CORRIDORFLOOR;
+               worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 3 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = CORRIDORFLOOR;
             }
          }
       }
@@ -645,30 +844,33 @@ int i, j, k;
       for (int i = 1; i < yDistBetween - randDist - 1; i++) {
          int x = startingPoints[secondRoom][0] - i;
          int z = rand2 + startingPoints[secondRoom][1];
-         worldLegend[x][0][z] = worldLegend[x][0][z] == corridorFloor ? corridorFloor : corridorWall;
-         worldLegend[x][0][z + 1] = corridorFloor;
-         worldLegend[x][0][z + 2] = corridorFloor;
-         worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == corridorFloor ? corridorFloor : corridorWall;
+         worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : CORRIDORWALL;
+         worldLegend[x][0][z + 1] = CORRIDORFLOOR;
+         worldLegend[x][0][z + 2] = CORRIDORFLOOR;
+         worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : CORRIDORWALL;
       }
    }
-   setViewPosition(-50, -120, -50);
-   setViewOrientation(90,90,0);
+
+   // place player in random room
+   int room = rand () % 9;
+   setViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
+   setViewOrientation(0,135,0);
    world[0][24][0] = 9;
    world[0][24][2] = 9;
    
    // build items from legend
    for (int i = 0; i < WORLDX; i++) {
       for (int j = 0; j < WORLDZ; j++) {
-         if (worldLegend[i][0][j] == corridorWall || worldLegend[i][0][j] == wall) {
+         if (worldLegend[i][0][j] == CORRIDORWALL || worldLegend[i][0][j] == WALL) {
             for (k = 0; k < 5; k++) {
-               world[i][25 + k][j] = 9;
+               world[i][25 + k][j] = 7;
             }
          }
-         if (worldLegend[i][0][j] == corridorFloor) {
-            world[i][29][j] = 3;
+         if (worldLegend[i][0][j] == CORRIDORFLOOR) {
+            world[i][25][j] = 3;
          }
-         if (worldLegend[i][0][j] == floor) {
-            world[i][29][j] = 4;
+         if (worldLegend[i][0][j] == FLOOR) {
+            world[i][25][j] = 4;
          }     
       }
    }
