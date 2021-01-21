@@ -169,10 +169,10 @@ void collisionResponse() {
                z = zz;
             } else if (deg >= 90 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
                x = xx;
-               z = zz + dist;
-            } else if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
+               z = zz + dist/4;
+            } else if (deg < 90 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
                x = xx;
-               z = zz - dist;
+               z = zz - dist/4;
             } else {
                x = xx;
                z = zz;
@@ -181,15 +181,19 @@ void collisionResponse() {
             if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
                x = xx;
                z = zz + dist;
+               printf("a\n");
             } else if (deg >= 180 && world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx - dist;
+               x = xx - dist/4;
                z = zz;
-            } else if (world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx + dist;
+               printf("b\n");
+            } else if (deg < 180 && world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
+               x = xx + dist/4;
                z = zz;
+               printf("c\n");
             } else {
                x = xx;
                z = zz;
+               printf("d\n");
             }
          } else if (deg >= 225 && deg < 315) {
             if (world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
@@ -197,10 +201,10 @@ void collisionResponse() {
                z = zz;
             } else if (deg >= 270 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
                x = xx;
-               z = zz - dist;
-            } else if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
+               z = zz - dist/4;
+            } else if (deg < 270 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
                x = xx;
-               z = zz + dist;
+               z = zz + dist/4;
             } else {
                x = xx;
                z = zz;
@@ -209,11 +213,11 @@ void collisionResponse() {
             if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
                x = xx;
                z = zz - dist;
-            } else if (deg >= 0 && world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx + dist;
+            } else if (deg >= 0 && deg < 45 && world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
+               x = xx + dist/4;
                z = zz;
-            } else if (world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx - dist;
+            } else if (deg >= 315 && world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
+               x = xx - dist/4;
                z = zz;
             } else {
                x = xx;
