@@ -155,61 +155,51 @@ void collisionResponse() {
          newx = (1/pow(a3, 2))*(u*RHS1-v*RHS2);
          newz = (1/pow(a3, 2))*(v*RHS1+u*RHS2);
          
-         printf("%f %f %f %f %f %f %f %f %f %f %f \n", alp1, alp2, alp3, a2, a3, u, v, RHS1, RHS2, newx, newz);
-         printf("%f %f %f %f %f %f %d\n", x1,z1,x2,z2,newx,newz, deg);
+         // printf("%f %f %f %f %f %f %f %f %f %f %f \n", alp1, alp2, alp3, a2, a3, u, v, RHS1, RHS2, newx, newz);
+         // printf("%f %f %f %f %f %f %d\n", x1,z1,x2,z2,newx,newz, deg);
       }
-      printf("xx: %f zz: %f newx: %f newz: %f x: %f z: %f\n", xx,zz,newx, newz,  xx-((-newx+xx)*2), zz-((-newz+zz)*2));
+      // printf("xx: %f zz: %f newx: %f newz: %f x: %f z: %f\n", xx,zz,newx, newz,  xx-((-newx+xx)*2), zz-((-newz+zz)*2));
       //float dist = fabs(sqrt(pow(newx - xx,2)+pow(newz - zz,2)));
       float dist = fabs(sqrt(pow(xx-((-newx+xx)*2) - xx,2)+pow(zz-((-newz+zz)*2) - zz,2)));
-      printf("dist: %f\n", dist);
-      createTube(1, xx, yy, zz, xx-((-newx+xx)*8), yy, zz-((-newz+zz)*8), 6);
+      // printf("dist: %f\n", dist);
+      // createTube(1, xx, yy, zz, xx-((-newx+xx)*8), yy, zz-((-newz+zz)*8), 6);
       // check if new location is inside a block
       if (world[(int)floor(xx-((-newx+xx)*2))][(int)floor(yy)][(int)floor(zz-((-newz+zz)*2))] != 0) {
          // prevent 'sticking' to walls
          x = xx;
          y = yy;
          z = zz;
-         printf("a block...\n");
-         printf("current location (%f, %f, %f)\n", x, y, z);
-         printf("new location (%f, %f, %f)\n", newx, y, newz);
-         printf("checked vals in world array (%f, %f, %f)\n", x-((-newx+x)*2), y, z-((-newz+z)*2));
-         printf("direction in deg: %d\n", deg);
+         // printf("%d\n", (int)floor(testing1 - testing2));
+         // printf("current location (%f, %f, %f)\n", x, y, z);
+         // printf("new location (%f, %f, %f)\n", newx, y, newz);
+         // printf("checked vals in world array (%f, %f, %f)\n", x-((-newx+x)*2), y, z-((-newz+z)*2));
+         // printf("direction in deg: %d\n", deg);
          // first octant
          if (deg >= 0 && deg < 45) {
-            printf("0-45\n");
             //check left
             if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
-               printf("a\n");
-               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
-                  printf("b\n");
+               // if there is a block in up direction (+x)
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) { //} && world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] != 0) {
                   x = floor(x + dist) - (dist/4);
+               // if next x is free and block above is free
                } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)ceil(x)][(int)floor(y)][(int)floor(z)] == 0){
-                  printf("bb\n");
                   x = nextx;
-               } else {
-                  printf("notBB!!\n");
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - (2 * dist))] != 0) {
-                  printf("c\n");
                   z = ceil((z - (2 * dist))) + dist;
                } else {
-                  printf("d\n");
                   z = z - (dist/4);
                }
             //check up
             } else if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] == 0) {
-               printf("e\n");
                if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
-                  printf("f\n");
                   z = ceil(z - dist) + (dist/4);
                } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x + (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
-                  printf("g\n");
                   x = floor((x + (2 * dist))) - dist;
                } else {
-                  printf("h\n");
                   x = x + (dist/4);
                }
             }
@@ -219,7 +209,7 @@ void collisionResponse() {
             if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   z = ceil(z - dist) + (dist/4);
-               } else {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x + (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -231,7 +221,7 @@ void collisionResponse() {
             } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
                if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   x = floor(x + dist) - (dist/4);
-               } else {
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)ceil(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - (2 * dist))] != 0) {
@@ -246,7 +236,7 @@ void collisionResponse() {
             if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   z = floor(z + dist) - (dist/4);
-               } else {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)ceil(z)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x + (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -258,7 +248,7 @@ void collisionResponse() {
             } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
                if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   x = floor(x + dist) - (dist/4);
-               } else {
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)ceil(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
@@ -273,7 +263,7 @@ void collisionResponse() {
             if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
                if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   x = floor(x + dist) - (dist/4);
-               } else {
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)ceil(x)][(int)floor(y)][(int)floor(z)] == 0){
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
@@ -285,7 +275,7 @@ void collisionResponse() {
             } else if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   z = floor(z + dist) - (dist/4);
-               } else {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)ceil(z)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x + (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -300,7 +290,7 @@ void collisionResponse() {
             if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   x = ceil(x - dist) + (dist/4);
-               } else {
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
@@ -312,7 +302,7 @@ void collisionResponse() {
             } else if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   z = floor(z + dist) - (dist/4);
-               } else {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)ceil(z)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -327,7 +317,7 @@ void collisionResponse() {
             if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   z = floor(z + dist) - (dist/4);
-               } else {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)ceil(z)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -339,7 +329,7 @@ void collisionResponse() {
             } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   x = ceil(x - dist) + (dist/4);
-               } else {
+               } else if (world[(int)ceil(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
@@ -354,7 +344,7 @@ void collisionResponse() {
             if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   z = ceil(z - dist) + (dist/4);
-               } else {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -366,7 +356,7 @@ void collisionResponse() {
             } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   x = ceil(x - dist) + (dist/4);
-               } else {
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - (2 * dist))] != 0) {
@@ -381,7 +371,7 @@ void collisionResponse() {
             if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   x = ceil(x - dist) + (dist/4);
-               } else {
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - (2 * dist))] != 0) {
@@ -393,7 +383,7 @@ void collisionResponse() {
             } else if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   z = ceil(z - dist) + (dist/4);
-               } else {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -469,13 +459,9 @@ void collisionResponse() {
 
          if (world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
             setViewPosition(-x,-y,-z);
-            printf("blocked and slide\n");
          } else {
             setViewPosition(-xx, -yy, -zz);
-            printf("blocked\n");
          }
-         
-         
          break;
       }      
    }
