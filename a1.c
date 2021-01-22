@@ -110,15 +110,18 @@ extern void getUserColour(int, GLfloat *, GLfloat *, GLfloat *, GLfloat *,
 void collisionResponse() {
 
 	/* your code for collisions goes here */
-   float x, y, z;
+   float x, y, z, nextx, nexty, nextz;
    float xx, yy, zz;
    float alp1, alp2, alp3, a2, a3, u, v, RHS1, RHS2, newx, newz;
 
    getViewPosition(&x, &y, &z);
    getOldViewPosition(&xx, &yy, &zz);
    x=-x;
+   nextx = x;
    z=-z;
+   nextz = z;
    xx=-xx;
+   yy=-yy;
    zz=-zz;
    float z2Array[4] = {z,z,zz,zz};
    float z1Array[4] = {zz,zz,z,z};
@@ -126,7 +129,7 @@ void collisionResponse() {
    float x2Array[4] = {x,x,xx,xx};
    float alp1Array[4] = {45.0,22.5,78.75,67.5};
    float alp2Array[4] = {67.5,78.75,22.5,45.0};
-
+   // check 5 directions if obstruction is ahead (45 to 135 degree in direction of movement, every 22.5 degrees)
    for (int i = 0; i < 5; i++) {
       
       int deg = (int)(450.0 + atan2f(z-(zz), x-(xx)) * (180.0 / 3.14159265)) % 360;
@@ -159,77 +162,316 @@ void collisionResponse() {
       //float dist = fabs(sqrt(pow(newx - xx,2)+pow(newz - zz,2)));
       float dist = fabs(sqrt(pow(xx-((-newx+xx)*2) - xx,2)+pow(zz-((-newz+zz)*2) - zz,2)));
       printf("dist: %f\n", dist);
-      createTube(1, xx, -yy, zz, xx-((-newx+xx)*8), -yy, zz-((-newz+zz)*8), 6);
-      if (world[(int)floor(xx-((-newx+xx)*2))][(int)floor(-yy)][(int)floor(zz-((-newz+zz)*2))] != 0) {
+      createTube(1, xx, yy, zz, xx-((-newx+xx)*8), yy, zz-((-newz+zz)*8), 6);
+      // check if new location is inside a block
+      if (world[(int)floor(xx-((-newx+xx)*2))][(int)floor(yy)][(int)floor(zz-((-newz+zz)*2))] != 0) {
          // prevent 'sticking' to walls
-         
-         if (deg >= 45 && deg < 135) {
-            if (world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx + dist;
-               z = zz;
-            } else if (deg >= 90 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
-               x = xx;
-               z = zz + dist/4;
-            } else if (deg < 90 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
-               x = xx;
-               z = zz - dist/4;
-            } else {
-               x = xx;
-               z = zz;
-            }
-         } else if (deg >= 135 && deg < 225) {
-            if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
-               x = xx;
-               z = zz + dist;
+         x = xx;
+         y = yy;
+         z = zz;
+         printf("a block...\n");
+         printf("current location (%f, %f, %f)\n", x, y, z);
+         printf("new location (%f, %f, %f)\n", newx, y, newz);
+         printf("checked vals in world array (%f, %f, %f)\n", x-((-newx+x)*2), y, z-((-newz+z)*2));
+         printf("direction in deg: %d\n", deg);
+         // first octant
+         if (deg >= 0 && deg < 45) {
+            printf("0-45\n");
+            //check left
+            if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
                printf("a\n");
-            } else if (deg >= 180 && world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx - dist/4;
-               z = zz;
-               printf("b\n");
-            } else if (deg < 180 && world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx + dist/4;
-               z = zz;
-               printf("c\n");
-            } else {
-               x = xx;
-               z = zz;
-               printf("d\n");
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
+                  printf("b\n");
+                  x = floor(x + dist) - (dist/4);
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)ceil(x)][(int)floor(y)][(int)floor(z)] == 0){
+                  printf("bb\n");
+                  x = nextx;
+               } else {
+                  printf("notBB!!\n");
+               }
+               if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - (2 * dist))] != 0) {
+                  printf("c\n");
+                  z = ceil((z - (2 * dist))) + dist;
+               } else {
+                  printf("d\n");
+                  z = z - (dist/4);
+               }
+            //check up
+            } else if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] == 0) {
+               printf("e\n");
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
+                  printf("f\n");
+                  z = ceil(z - dist) + (dist/4);
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
+                  z = nextz;
+               }
+               if (world[(int)floor(x + (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
+                  printf("g\n");
+                  x = floor((x + (2 * dist))) - dist;
+               } else {
+                  printf("h\n");
+                  x = x + (dist/4);
+               }
             }
-         } else if (deg >= 225 && deg < 315) {
-            if (world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx - dist;
-               z = zz;
-            } else if (deg >= 270 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
-               x = xx;
-               z = zz - dist/4;
-            } else if (deg < 270 && world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz + dist)] == 0) {
-               x = xx;
-               z = zz + dist/4;
-            } else {
-               x = xx;
-               z = zz;
+         // second octant
+         } else if (deg >= 45 && deg < 90) {
+            //check up
+            if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] == 0) {
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
+                  z = ceil(z - dist) + (dist/4);
+               } else {
+                  z = nextz;
+               }
+               if (world[(int)floor(x + (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
+                  x = floor((x + (2 * dist))) - dist;
+               } else {
+                  x = x + (dist/4);
+               }
+            //check left
+            } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
+                  x = floor(x + dist) - (dist/4);
+               } else {
+                  x = nextx;
+               }
+               if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - (2 * dist))] != 0) {
+                  z = ceil((z - (2 * dist))) + dist;
+               } else {
+                  z = z - (dist/4);
+               }
             }
-         } else {
-            if (world[(int)floor(xx)][(int)floor(-yy)][(int)floor(zz - dist)] == 0) {
-               x = xx;
-               z = zz - dist;
-            } else if (deg >= 0 && deg < 45 && world[(int)floor(xx + dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx + dist/4;
-               z = zz;
-            } else if (deg >= 315 && world[(int)floor(xx - dist)][(int)floor(-yy)][(int)floor(zz)] == 0) {
-               x = xx - dist/4;
-               z = zz;
-            } else {
-               x = xx;
-               z = zz;
+         // third octant
+         }  else if (deg >= 90 && deg < 135) {
+            //check up
+            if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] == 0) {
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
+                  z = floor(z + dist) - (dist/4);
+               } else {
+                  z = nextz;
+               }
+               if (world[(int)floor(x + (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
+                  x = floor((x + (2 * dist))) - dist;
+               } else {
+                  x = x + (dist/4);
+               }
+            //check right
+            } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
+                  x = floor(x + dist) - (dist/4);
+               } else {
+                  x = nextx;
+               }
+               if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
+                  z = floor((z + (2 * dist))) - dist;
+               } else {
+                  z = z + (dist/4);
+               }
+            }
+         // fourth octant
+         } else if (deg >= 135 && deg < 180) {
+            // check right
+            if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
+                  x = floor(x + dist) - (dist/4);
+               } else {
+                  x = nextx;
+               }
+               if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
+                  z = floor((z + (2 * dist))) - dist;
+               } else {
+                  z = z + (dist/4);
+               }
+            // check up
+            } else if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] == 0) {
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
+                  z = floor(z + dist) - (dist/4);
+               } else {
+                  z = nextz;
+               }
+               if (world[(int)floor(x + (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
+                  x = floor((x + (2 * dist))) - dist;
+               } else {
+                  x = x + (dist/4);
+               }
+            }
+         // fifth octant
+         } else if (deg >= 180 && deg < 225) {
+            // check right
+            if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
+               if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
+                  x = ceil(x - dist) + (dist/4);
+               } else {
+                  x = nextx;
+               }
+               if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
+                  z = floor((z + (2 * dist))) - dist;
+               } else {
+                  z = z + (dist/4);
+               }
+            // check down
+            } else if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
+               if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
+                  z = floor(z + dist) - (dist/4);
+               } else {
+                  z = nextz;
+               }
+               if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
+                  x = ceil((x - (2 * dist))) + dist;
+               } else {
+                  x = x - (dist/4);
+               }
+            }
+         // sixth octant
+         } else if (deg >= 225 && deg < 270) {
+            // check down
+            if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
+               if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
+                  z = floor(z + dist) - (dist/4);
+               } else {
+                  z = nextz;
+               }
+               if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
+                  x = ceil((x - (2 * dist))) + dist;
+               } else {
+                  x = x - (dist/4);
+               }
+            // check right
+            } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
+               if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
+                  x = ceil(x - dist) + (dist/4);
+               } else {
+                  x = nextx;
+               }
+               if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
+                  z = floor((z + (2 * dist))) - dist;
+               } else {
+                  z = z + (dist/4);
+               }
+            }
+         // seventh octant
+         } else if (deg >= 270 && deg < 315) {
+            // check down
+            if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
+               if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
+                  z = ceil(z - dist) + (dist/4);
+               } else {
+                  z = nextz;
+               }
+               if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
+                  x = ceil((x - (2 * dist))) + dist;
+               } else {
+                  x = x - (dist/4);
+               }
+            // check left
+            } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
+               if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
+                  x = ceil(x - dist) + (dist/4);
+               } else {
+                  x = nextx;
+               }
+               if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - (2 * dist))] != 0) {
+                  z = ceil((z - (2 * dist))) + dist;
+               } else {
+                  z = z - (dist/4);
+               }
+            }
+         // eight octant
+         } else if (deg >= 315 && deg <= 360) {
+            // check left
+            if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
+               if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
+                  x = ceil(x - dist) + (dist/4);
+               } else {
+                  x = nextx;
+               }
+               if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - (2 * dist))] != 0) {
+                  z = ceil((z - (2 * dist))) + dist;
+               } else {
+                  z = z - (dist/4);
+               }
+            // check down
+            } else if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
+               if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
+                  z = ceil(z - dist) + (dist/4);
+               } else {
+                  z = nextz;
+               }
+               if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
+                  x = ceil((x - (2 * dist))) + dist;
+               } else {
+                  x = x - (dist/4);
+               }
             }
          }
 
-         if (world[(int)floor(x)][(int)floor(-yy)][(int)floor(z)] == 0) {
-            setViewPosition(-x,yy,-z);
+         // if (deg >= 45 && deg < 135) { // if movement in x+ direction
+         //    if (world[(int)floor(xx + dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
+         //       x = xx + dist;
+
+         //       z = zz;
+         //    } else if (deg >= 90 && world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz + dist)] == 0) {
+         //       x = xx;
+         //       z = zz + dist/4;
+         //    } else if (deg < 90 && world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz - dist)] == 0) {
+         //       x = xx;
+         //       z = zz - dist/4;
+         //    } else {
+         //       x = xx;
+         //       z = zz;
+         //    }
+         // } else if (deg >= 135 && deg < 225) {// if movement in y+ direction
+         //    if (world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz + dist)] == 0) {
+         //       x = xx;
+         //       z = zz + dist;
+         //       printf("a\n");
+         //    } else if (deg >= 180 && world[(int)floor(xx - dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
+         //       x = xx - dist/4;
+         //       z = zz;
+         //       printf("b\n");
+         //    } else if (deg < 180 && world[(int)floor(xx + dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
+         //       x = xx + dist/4;
+         //       z = zz;
+         //       printf("c\n");
+         //    } else {
+         //       x = xx;
+         //       z = zz;
+         //       printf("d\n");
+         //    }
+         // } else if (deg >= 225 && deg < 315) {// if movement in x- direction
+         //    if (world[(int)floor(xx - dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
+         //       x = xx - dist;
+         //       z = zz;
+         //    } else if (deg >= 270 && world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz - dist)] == 0) {
+         //       x = xx;
+         //       z = zz - dist/4;
+         //    } else if (deg < 270 && world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz + dist)] == 0) {
+         //       x = xx;
+         //       z = zz + dist/4;
+         //    } else {
+         //       x = xx;
+         //       z = zz;
+         //    }
+         // } else {// if movement in y- direction
+         //    if (world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz - dist)] == 0) {
+         //       x = xx;
+         //       z = zz - dist;
+         //    } else if (deg >= 0 && deg < 45 && world[(int)floor(xx + dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
+         //       x = xx + dist/4;
+         //       z = zz;
+         //    } else if (deg >= 315 && world[(int)floor(xx - dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
+         //       x = xx - dist/4;
+         //       z = zz;
+         //    } else {
+         //       x = xx;
+         //       z = zz;
+         //    }
+         // }
+
+         if (world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
+            setViewPosition(-x,-y,-z);
             printf("blocked and slide\n");
          } else {
-            setViewPosition(-xx, yy, -zz);
+            setViewPosition(-xx, -yy, -zz);
             printf("blocked\n");
          }
          
@@ -253,7 +495,7 @@ void collisionResponse() {
    // getViewPosition(&x, &y, &z);
    // getOldViewPosition(&xx, &yy, &zz);
    
-   // if (world[(int)floor(-xx-((x-xx)*2.0))][(int)floor(-yy-((y-yy)*2.0))][(int)floor(-zz-((z-zz)*2.0))] != 0) {
+   // if (world[(int)floor(-xx-((x-xx)*2.0))][(int)floor(yy-((yyy)*2.0))][(int)floor(-zz-((z-zz)*2.0))] != 0) {
    //    setViewPosition(xx, yy, zz);
    // }
 
