@@ -11,6 +11,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <sys/time.h> 
 #include "graphics.h"
 
 #define WALL 0
@@ -99,7 +100,8 @@ extern void getUserColour(int, GLfloat *, GLfloat *, GLfloat *, GLfloat *,
     GLfloat *, GLfloat *, GLfloat *, GLfloat *); 
 
 /********* end of extern variable declarations **************/
-
+// variables to keep track of time
+   struct timeval t1, t2, t3;
 
 	/*** collisionResponse() ***/
 	/* -performs collision detection and response */
@@ -133,10 +135,10 @@ void collisionResponse() {
    for (int i = 0; i < 5; i++) {
       
       int deg = (int)(450.0 + atan2f(z-(zz), x-(xx)) * (180.0 / 3.14159265)) % 360;
-      if (i == 4) {
+      if (i == 4) { // if direction straight ahead
          newx = x;
          newz = z;
-      } else {
+      } else { // if direction at an angle
          float x1 = x1Array[i];
          float x2 = x2Array[i];
          float z1 = z1Array[i];
@@ -154,32 +156,25 @@ void collisionResponse() {
          RHS2 = z2*u - x2*v - a2*a3*sin(alp1);
          newx = (1/pow(a3, 2))*(u*RHS1-v*RHS2);
          newz = (1/pow(a3, 2))*(v*RHS1+u*RHS2);
-         
-         // printf("%f %f %f %f %f %f %f %f %f %f %f \n", alp1, alp2, alp3, a2, a3, u, v, RHS1, RHS2, newx, newz);
-         // printf("%f %f %f %f %f %f %d\n", x1,z1,x2,z2,newx,newz, deg);
       }
-      // printf("xx: %f zz: %f newx: %f newz: %f x: %f z: %f\n", xx,zz,newx, newz,  xx-((-newx+xx)*2), zz-((-newz+zz)*2));
-      //float dist = fabs(sqrt(pow(newx - xx,2)+pow(newz - zz,2)));
+      // distance of next move
       float dist = fabs(sqrt(pow(xx-((-newx+xx)*2) - xx,2)+pow(zz-((-newz+zz)*2) - zz,2)));
-      // printf("dist: %f\n", dist);
-      // createTube(1, xx, yy, zz, xx-((-newx+xx)*8), yy, zz-((-newz+zz)*8), 6);
       // check if new location is inside a block
-      if (world[(int)floor(xx-((-newx+xx)*2))][(int)floor(yy)][(int)floor(zz-((-newz+zz)*2))] != 0) {
+      if (world[(int)floor(xx-((-newx+xx)*2))][(int)floor(yy)][(int)floor(zz-((-newz+zz)*2))] != 0 && world[(int)floor(xx-((-newx+xx)*2))][(int)floor(yy+1)][(int)floor(zz-((-newz+zz)*2))] == 0) {
+         // move on top of single block
+         setViewPosition(-(xx-((-newx+xx)*2)),-(yy+1),-(zz-((-newz+zz)*2)));
+      } else if (world[(int)floor(xx-((-newx+xx)*2))][(int)floor(yy)][(int)floor(zz-((-newz+zz)*2))] != 0) {
          // prevent 'sticking' to walls
+         // split 360 degrees into 8 octants and check each one
          x = xx;
          y = yy;
          z = zz;
-         // printf("%d\n", (int)floor(testing1 - testing2));
-         // printf("current location (%f, %f, %f)\n", x, y, z);
-         // printf("new location (%f, %f, %f)\n", newx, y, newz);
-         // printf("checked vals in world array (%f, %f, %f)\n", x-((-newx+x)*2), y, z-((-newz+z)*2));
-         // printf("direction in deg: %d\n", deg);
          // first octant
          if (deg >= 0 && deg < 45) {
             //check left
             if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
                // if there is a block in up direction (+x)
-               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) { //} && world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] != 0) {
+               if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   x = floor(x + dist) - (dist/4);
                // if next x is free and block above is free
                } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)ceil(x)][(int)floor(y)][(int)floor(z)] == 0){
@@ -329,7 +324,7 @@ void collisionResponse() {
             } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   x = ceil(x - dist) + (dist/4);
-               } else if (world[(int)ceil(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
@@ -394,97 +389,15 @@ void collisionResponse() {
             }
          }
 
-         // if (deg >= 45 && deg < 135) { // if movement in x+ direction
-         //    if (world[(int)floor(xx + dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
-         //       x = xx + dist;
-
-         //       z = zz;
-         //    } else if (deg >= 90 && world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz + dist)] == 0) {
-         //       x = xx;
-         //       z = zz + dist/4;
-         //    } else if (deg < 90 && world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz - dist)] == 0) {
-         //       x = xx;
-         //       z = zz - dist/4;
-         //    } else {
-         //       x = xx;
-         //       z = zz;
-         //    }
-         // } else if (deg >= 135 && deg < 225) {// if movement in y+ direction
-         //    if (world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz + dist)] == 0) {
-         //       x = xx;
-         //       z = zz + dist;
-         //       printf("a\n");
-         //    } else if (deg >= 180 && world[(int)floor(xx - dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
-         //       x = xx - dist/4;
-         //       z = zz;
-         //       printf("b\n");
-         //    } else if (deg < 180 && world[(int)floor(xx + dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
-         //       x = xx + dist/4;
-         //       z = zz;
-         //       printf("c\n");
-         //    } else {
-         //       x = xx;
-         //       z = zz;
-         //       printf("d\n");
-         //    }
-         // } else if (deg >= 225 && deg < 315) {// if movement in x- direction
-         //    if (world[(int)floor(xx - dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
-         //       x = xx - dist;
-         //       z = zz;
-         //    } else if (deg >= 270 && world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz - dist)] == 0) {
-         //       x = xx;
-         //       z = zz - dist/4;
-         //    } else if (deg < 270 && world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz + dist)] == 0) {
-         //       x = xx;
-         //       z = zz + dist/4;
-         //    } else {
-         //       x = xx;
-         //       z = zz;
-         //    }
-         // } else {// if movement in y- direction
-         //    if (world[(int)floor(xx)][(int)floor(yy)][(int)floor(zz - dist)] == 0) {
-         //       x = xx;
-         //       z = zz - dist;
-         //    } else if (deg >= 0 && deg < 45 && world[(int)floor(xx + dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
-         //       x = xx + dist/4;
-         //       z = zz;
-         //    } else if (deg >= 315 && world[(int)floor(xx - dist)][(int)floor(yy)][(int)floor(zz)] == 0) {
-         //       x = xx - dist/4;
-         //       z = zz;
-         //    } else {
-         //       x = xx;
-         //       z = zz;
-         //    }
-         // }
-
          if (world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
             setViewPosition(-x,-y,-z);
+            // setOldViewPosition(-xx,-yy,-zz);
          } else {
             setViewPosition(-xx, -yy, -zz);
          }
          break;
       }      
    }
-   
-   // float xNew, yNew, zNew;
-
-   // getOldViewPosition(&x, &y, &z);
-   // getViewPosition(&xNew, &yNew, &zNew);
-   // xNew = -1 * xNew;
-   // yNew = -1 * yNew;
-   // zNew = -1 * zNew;
-
-   // if (world[(int)floor(xNew)][(int)floor(yNew)][(int)floor(zNew)] != 0) {
-   //    setViewPosition(x, y, z);
-   // }
-   //setViewOrientation(0.0, 0.0, 0.0);
-   // getViewPosition(&x, &y, &z);
-   // getOldViewPosition(&xx, &yy, &zz);
-   
-   // if (world[(int)floor(-xx-((x-xx)*2.0))][(int)floor(yy-((yyy)*2.0))][(int)floor(-zz-((z-zz)*2.0))] != 0) {
-   //    setViewPosition(xx, yy, zz);
-   // }
-
 }
 
 
@@ -613,73 +526,37 @@ createTube(2, -xx, -yy, -zz, -xx-((x-xx)*25.0), -yy-((y-yy)*25.0), -zz-((z-zz)*2
 
 
    } else {
-      /* counter for user defined colour changes */
-      static int colourCount = 0;
-      static GLfloat offset = 0.0;
 	   /* your code goes here */
-      /* change user defined colour over time */
-      if (colourCount == 1) offset += 0.05;
-      else offset -= 0.01;
-      if (offset >= 0.5) colourCount = 0;
-      if (offset <= 0.0) colourCount = 1;
-      setUserColour(9, 0.7, 0.3 + offset, 0.7, 1.0, 0.3, 0.15 + offset, 0.3, 1.0);
-
-/* 
       float x, y, z;
-      float xNew, yNew, zNew;
-      float mvx, mvy, mvz;
-      float rotx, roty, rotz;
+      double r,g,b;
 
-      getOldViewPosition(&x, &y, &z);
-      getViewPosition(&xNew, &yNew, &zNew);
-      xNew = -1 * xNew;
-      yNew = -1 * yNew;
-      zNew = -1 * zNew;
-      getViewOrientation(&mvx, &mvy, &mvz);
-      rotx = (mvx / 180.0 * 3.141592);
-      roty = (mvy / 180.0 * 3.141592);
-
-      float xx, yy, zz;
-      getViewPosition(&x, &y, &z);
-      getOldViewPosition(&xx, &yy, &zz); */
-
-
-      // vpx -= sin(roty) * 0.3;
-		// // turn off y motion so you can't fly
-      //    if (flycontrol == 1)
-      //       vpy += sin(rotx) * 0.3;
-      //    vpz += cos(roty) * 0.3;
-
-
-      // printf("%f %f %f %f %f %f\n", xx, yy, zz, x, y, z);
-      // printf("%f %f %f\n",  -xx+((x-xx)*25.0), -yy+((y-yy)*25.0), -zz+((z-zz)*25.0));
-      //createTube(2, -xx, -yy, -zz, -(-x - sin(mvy)), -yy-((y-yy)*4.0), -(-z + cos(mvy)), 2);
-      //createTube(2, -xx, -yy, -zz, -xx-((x-xx)*2.0) + 3, -yy-((y-yy)*2.0), -zz-((z-zz)*2.0), 3);
+      gettimeofday(&t2, NULL);
       
-      //printf("mvx: %lf mvy: %lf mvz: %lf rotx: %lf roty: %lf\n", mvx, mvy, mvz, rotx, roty);
-/* 
-      float deg = 450.0 + atan2f(-z-(-zz), -x-(-xx)) * (180.0 / 3.14159265);
-      //printf("degrees y: %d  atan: %f  y: %f, yy: %f, x: %f, xx: %f, negDeg: %d\n", (int)mvy % 360, deg,-z,-zz,-x,-xx, (int)deg % 360);
-      if (world[(int)floor(-xx-((x-xx)*2.0))][(int)floor(-yy-((y-yy)*2.0))][(int)floor(-zz-((z-zz)*2.0))] != 0) {
-         setViewPosition(xx, yy, zz);
+      double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; // sec to ms
+      elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
+      double elapsedTime2 = (t2.tv_sec - t3.tv_sec) * 1000.0; // sec to ms
+      elapsedTime2 += (t2.tv_usec - t3.tv_usec) / 1000.0; // us to ms
+
+      // change color of random blocks
+      if (elapsedTime2 > 600.0) {
+         r = ((rand() % (255 + 1 - 1)) + 1)/255.0;
+         g = ((rand() % (255 + 1 - 1)) + 1)/255.0;
+         b = ((rand() % (255 + 1 - 1)) + 1)/255.0;
+         setUserColour(10, r, g, b, 1.0, r, g, b, 1.0);
+         gettimeofday(&t3, NULL);
       }
-
-      float ox, oy, oz, nx, ny, nz, vox, voy, voz;
-      getViewPosition(&nx, &ny, &nz);
-      getOldViewPosition(&ox, &oy, &oz);
-      getViewOrientation(&vox, &voy, &voz);
-      rotx = (vox / 180.0 * 3.141592);
-      roty = (voy / 180.0 * 3.141592);
-      nx -= sin(roty) * .01;
-      ny += sin(rotx);
-      nz += cos(roty); */
-
-      //createTube(2, -ox, -oy, -oz, -nx, -ny, -nz, 2);
-
-      // if (world[(int)floor(-nx)][(int)floor(-ny)][(int)floor(-nz)] != 0) {
-      //    setViewPosition(xx, yy, zz);
-      // }
-
+      // add gravity
+      if (elapsedTime > 20.0) {
+         getViewPosition(&x, &y, &z);
+         if(world[(int)floor(-x)][(int)floor(-(y))][(int)floor(-z)] == 0){ 
+            y+=0.1;
+            if (world[(int)floor(-x)][(int)floor(-(y))][(int)floor(-z)] != 0) {
+               y = floor(y);
+            }
+         }
+         setViewPosition(x, y, z);
+         gettimeofday(&t1, NULL);
+      }
    }
 }
 
@@ -767,25 +644,18 @@ int i, j, k;
    } else {
 
 	/* your code to build the world goes here */
+   // array to store 2D world
    int worldLegend[WORLDX][1][WORLDZ];
-   srand((unsigned)time(NULL));
-   setUserColour(9, 0.7, 0.3, 0.7, 1.0, 0.3, 0.15, 0.3, 1.0);
-   
    int startingPoints[9][2]; // Room 0 is bottom left, room 1 is bottom middle...
    int roomSizes[9][2];
    int x, z;
+
+   srand((unsigned)time(NULL));
+   // generate 9 rooms
    for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; j++) {
-         /* generate starting point for each room 
-         x = (rand() % (30)) + 1;
-         z = (rand() % (30)) + 1;
-         x = x + (j * 34);
-         z = z + (i * 34);
-         startingPoints[(3 * j) + i][0] = x;
-         startingPoints[(3 * j) + i][1] = z;
-         */
          
-         /* generate random room size that fits each of the quadrants */
+         // generate random room size that fits each of the quadrants
          x = (rand() % (30 - 3 + 1)) + 3;
          z = (rand() % (30 - 3 + 1)) + 3;
          roomSizes[(3 * j) + i][0] = x;
@@ -798,35 +668,47 @@ int i, j, k;
          startingPoints[(3 * j) + i][1] = z;
       }
    }
-   
-   for (int j = 0; j < 9; j++) {
-      printf("size: %d-%d Location: %d-%d \n", roomSizes[j][0], roomSizes[j][1], startingPoints[j][0], startingPoints[j][1]); 
-      
-   }
-   
 
-   
-   
-   /* build a red platform */
-   // for(i=0; i<WORLDX; i++) {
-   //    for(j=0; j<WORLDZ; j++) {
-   //       world[i][24][j] = 3;
-   //    }
-   // }
-
+   // initialize 2d world array to be empty
    for(i = 0; i < WORLDX; i++) {
       for(j = 0; j < WORLDZ; j++) {
          worldLegend[i][0][j] = -1;
       }
    }
-   
+
+   // Set colors
+   // orange
+   setUserColour(10, 1.0, 0.60, 0.20, 1.0, 1.0, 0.60, 0.20, 1.0);
+   // vanadyl blue
+   setUserColour(11, 0, 151.0/255.0, 230.0/255.0, 1.0, 0, 151.0/255.0, 230.0/255.0, 1.0);
+   // matt purple
+   setUserColour(12, 140.0/255.0, 122.0/255.0, 230.0/255.0, 1.0, 140.0/255.0, 122.0/255.0, 230.0/255.0, 1.0);
+   // nanohanacha gold
+   setUserColour(13, 225.0/255.0, 177.0/255.0, 44.0/255.0, 1.0, 225.0/255.0, 177.0/255.0, 44.0/255.0, 1.0);
+   //skirret green
+   setUserColour(14, 68.0/255.0, 189.0/255.0, 50.0/255.0, 1.0, 68.0/255.0, 189.0/255.0, 50.0/255.0, 1.0);
+   // naval
+   setUserColour(15, 64.0/255.0, 115.0/255.0, 158.0/255.0, 1.0, 64.0/255.0, 115.0/255.0, 158.0/255.0, 1.0);
+
+   // hd orange
+   setUserColour(16, 194.0/255.0, 54.0/255.0, 22.0/255.0, 1.0, 194.0/255.0, 54.0/255.0, 22.0/255.0, 1.0);
+   // hint of pensive
+   setUserColour(17, 220.0/255.0, 221.0/255.0, 22.0/255.0, 1.0, 220.0/255.0, 221.0/255.0, 22.0/255.0, 1.0);
+   // chain gang grey
+   setUserColour(18, 113.0/255.0, 128.0/255.0, 147.0/255.0, 1.0, 113.0/255.0, 128.0/255.0, 147.0/255.0, 1.0);
+   // pico void
+   setUserColour(19, 25.0/255.0, 42.0/255.0, 86.0/255.0, 1.0, 25.0/255.0, 42.0/255.0, 86.0/255.0, 1.0);
+   // electromagnetic
+   setUserColour(20, 47.0/255.0, 54.0/255.0, 64.0/255.0, 1.0, 47.0/255.0, 54.0/255.0, 64.0/255.0, 1.0);
+
+
    /* generate walls */
    for (int i = 0; i < 9; i++) {
       // build walls along x axis (including corners)
       for (int j = startingPoints[i][0]; j < (startingPoints[i][0] + roomSizes[i][0] + 2); j++) {
          for (int k = 0; k < 5; k++) {
-            world[j][25 + k][startingPoints[i][1]] = 7;
-            world[j][25 + k][startingPoints[i][1] + roomSizes[i][1] + 1] = 7;
+            world[j][25 + k][startingPoints[i][1]] = (rand() % (15 + 1 - 11)) + 11;
+            world[j][25 + k][startingPoints[i][1] + roomSizes[i][1] + 1] = (rand() % (15 + 1 - 11)) + 11;
          }
          if (j > startingPoints[i][0] && j < (startingPoints[i][0] + roomSizes[i][0] + 1)) {
             for (int k = startingPoints[i][1] + 1; k < (startingPoints[i][1] + roomSizes[i][1] + 1); k++) {
@@ -837,8 +719,8 @@ int i, j, k;
       // build walls along z axis
       for (int j = startingPoints[i][1] + 1; j < (startingPoints[i][1] + roomSizes[i][1] + 1); j++) {
          for (int k = 0; k < 5; k++) {
-            world[startingPoints[i][0]][25 + k][j] = 7;
-            world[startingPoints[i][0] + roomSizes[i][0] + 1][25 + k][j] = 7; 
+            world[startingPoints[i][0]][25 + k][j] = (rand() % (15 + 1 - 11)) + 11;
+            world[startingPoints[i][0] + roomSizes[i][0] + 1][25 + k][j] = (rand() % (15 + 1 - 11)) + 11; 
          }
       }
    }
@@ -848,7 +730,7 @@ int i, j, k;
       // generate corridors along z axis
       int firstRoom = ((double)(0.25 * (pow(-1,i))) * ((6 * (pow(-1,i)) * i - 7 * (pow(-1,i)) - 1))); // corridor on right side (pattern: 0,1,3,4,6,7)
       int secondRoom = ((double)(0.25 * (pow(-1,i))) * ((6 * (pow(-1,i)) * i - 7 * (pow(-1,i)) - 1))) + 1; // corridor on left side (pattern: 1,2,4,5,7,8)
-      printf("frist: %d second: %d\n", firstRoom, secondRoom);
+      
       // select right facing corridor openings
       int rand1 = rand () % (roomSizes[firstRoom][0] - 1);
       for (int k = 0; k < 5; k++) {
@@ -870,7 +752,9 @@ int i, j, k;
       // select random location between both doorways to insert connecting corridor
       int yDistBetween = (startingPoints[secondRoom][1]) - (startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1) - 1;
       
-      int randDist = rand () % (yDistBetween - 1); // choose where the connecting corridor starts
+      // choose where the connecting corridor starts
+      int randDist = rand () % (yDistBetween - 1);
+      
       // build corridor until join
       for (int i = 0; i < randDist; i++) {
          int x = rand1 + startingPoints[firstRoom][0];
@@ -1086,26 +970,32 @@ int i, j, k;
    // place player in random room
    int room = rand () % 9;
    setViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
+   setOldViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
    setViewOrientation(0,135,0);
-   world[0][24][0] = 9;
-   world[0][24][2] = 9;
    
    // build items from legend
    for (int i = 0; i < WORLDX; i++) {
       for (int j = 0; j < WORLDZ; j++) {
          if (worldLegend[i][0][j] == CORRIDORWALL || worldLegend[i][0][j] == WALL) {
             for (k = 0; k < 5; k++) {
-               world[i][25 + k][j] = 7;
+               world[i][25 + k][j] = (rand() % (15 + 1 - 11)) + 11;
             }
          }
          if (worldLegend[i][0][j] == CORRIDORFLOOR) {
-            world[i][25][j] = 3;
+            world[i][25][j] = (rand() % (5 + 1 - 4)) + 4;
+            world[i][29][j] = (rand() % (15 + 1 - 11)) + 11;
          }
          if (worldLegend[i][0][j] == FLOOR) {
-            world[i][25][j] = 4;
+            if (((rand() % (100 + 1 - 1)) + 1) == 1) {
+               world[i][26][j] = 10;
+            }
+            world[i][25][j] = (rand() % (20 + 1 - 16)) + 16;
+            world[i][29][j] = (rand() % (15 + 1 - 11)) + 11;
          }     
       }
    }
+   // start timer
+   gettimeofday(&t1, NULL);
 
    }
 	/* starts the graphics processing loop */
