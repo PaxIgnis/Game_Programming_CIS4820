@@ -204,7 +204,7 @@ void collisionResponse() {
             if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x + dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   z = ceil(z - dist) + (dist/4);
-               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z-dist)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x + (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -285,7 +285,7 @@ void collisionResponse() {
             if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + dist)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z + dist)] != 0) {
                   x = ceil(x - dist) + (dist/4);
-               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x-dist)][(int)floor(y)][(int)floor(z)] == 0) {
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z + (2 * dist))] != 0) {
@@ -339,7 +339,7 @@ void collisionResponse() {
             if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   z = ceil(z - dist) + (dist/4);
-               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z-dist)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -366,7 +366,7 @@ void collisionResponse() {
             if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - dist)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   x = ceil(x - dist) + (dist/4);
-               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
+               } else if (world[(int)floor(nextx)][(int)floor(y)][(int)floor(z)] == 0 && world[(int)floor(x-dist)][(int)floor(y)][(int)floor(z)] == 0) {
                   x = nextx;
                }
                if (world[(int)floor(x)][(int)floor(y)][(int)floor(z - (2 * dist))] != 0) {
@@ -378,7 +378,7 @@ void collisionResponse() {
             } else if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z)] == 0) {
                if (world[(int)floor(x - dist)][(int)floor(y)][(int)floor(z - dist)] != 0) {
                   z = ceil(z - dist) + (dist/4);
-               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
+               } else if (world[(int)floor(x)][(int)floor(y)][(int)floor(nextz)] == 0 && world[(int)floor(x)][(int)floor(y)][(int)floor(z-dist)] == 0) {
                   z = nextz;
                }
                if (world[(int)floor(x - (2 * dist))][(int)floor(y)][(int)floor(z)] != 0) {
@@ -391,7 +391,6 @@ void collisionResponse() {
 
          if (world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
             setViewPosition(-x,-y,-z);
-            // setOldViewPosition(-xx,-yy,-zz);
          } else {
             setViewPosition(-xx, -yy, -zz);
          }
@@ -531,7 +530,8 @@ createTube(2, -xx, -yy, -zz, -xx-((x-xx)*25.0), -yy-((y-yy)*25.0), -zz-((z-zz)*2
       double r,g,b;
 
       gettimeofday(&t2, NULL);
-      
+
+      // calculate time passed since last run
       double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; // sec to ms
       elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
       double elapsedTime2 = (t2.tv_sec - t3.tv_sec) * 1000.0; // sec to ms
@@ -676,7 +676,7 @@ int i, j, k;
       }
    }
 
-   // Set colors
+   /* Set colors */
    // orange
    setUserColour(10, 1.0, 0.60, 0.20, 1.0, 1.0, 0.60, 0.20, 1.0);
    // vanadyl blue
@@ -986,7 +986,8 @@ int i, j, k;
             world[i][29][j] = (rand() % (15 + 1 - 11)) + 11;
          }
          if (worldLegend[i][0][j] == FLOOR) {
-            if (((rand() % (100 + 1 - 1)) + 1) == 1) {
+            // sets random blocks
+            if (((rand() % (65 + 1 - 1)) + 1) == 1) {
                world[i][26][j] = 10;
             }
             world[i][25][j] = (rand() % (20 + 1 - 16)) + 16;
