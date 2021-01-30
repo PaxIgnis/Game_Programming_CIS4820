@@ -777,7 +777,7 @@ static int lighton = 1;
          glutPostRedisplay();
          break;
       case 'f':		// toggle flying controls
-         if (flycontrol == 0) flycontrol = 1;
+         if (flycontrol == 0) flycontrol = 0;
          else flycontrol = 0;
          break;
       case ' ':		// toggle space flag

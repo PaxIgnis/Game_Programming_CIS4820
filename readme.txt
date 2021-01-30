@@ -18,6 +18,8 @@ The Player is randomly placed in one of the rooms.
 Gravity and collision detection have been implemented, there is no clipping with the collision detection.
 When a player collides with a wall, they will slide along it instead of stopping.
 
+Flying has been disabled, as per the spec.
+
 Program was tested on a Windows 10 WSL configuration.
 
 
