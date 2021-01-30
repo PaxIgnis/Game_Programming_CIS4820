@@ -1,4 +1,27 @@
+*** BEGIN
 
+Student: Hendrik van der Meijden
+Game Programming Assignment 1
+
+9 rooms are randomly generated, with a minimum size of 3x3.
+Doorway locations are randomly selected, and most coridoors are not straight because of this.
+It is possible that two coridoors intersect, which the Professor said was fine.
+
+The ceiling and the walls have the same ramdom pastel color theme.
+The coridoor floors are black and white, while the room floors are random bright colors.
+
+The random blocks used for jumping are randomly placed in rooms, with a chance of 15% of being generated.
+These blocks slowly change colors.
+
+The Player is randomly placed in one of the rooms.
+
+Gravity and collision detection have been implemented, there is no clipping with the collision detection.
+When a player collides with a wall, they will slide along it instead of stopping.
+
+Program was tested on a Windows 10 WSL configuration.
+
+
+*** END
 
 Building and Running the Graphics System
 ----------------------------------------
