@@ -1,4 +1,8 @@
-// Struct to keep track of different levels
+/*
+ * Struct to keep track of different levels
+ * worldLegend[*][*][*][1] stores actual values from world array
+ * worldLegend[*][*][*][0] stores additional info for each location
+ */
 typedef struct level {
     int worldLegend[WORLDX][WORLDY][WORLDZ][2];
     struct level *up;
@@ -7,8 +11,11 @@ typedef struct level {
     int lastOrientation[3];
 } level;
 
+// clears world values
+void clearWorld();
+
 // creates dungeon level
-void createLevel(level* currentLevel);
+void createLevel(level* currentLevel, int direction);
 
 // handles collisions
 void handleCollision();
@@ -19,5 +26,14 @@ void handleGravityCollision();
 // Creates data struct to store new level
 level* initNewLevel(level* currentPos, int direction);
 
+// saves level details to dat struct
+void saveLevel(level* currentLevel);
+
 // sets custom colors
 void setColors();
+
+// shortcut to update user arrays
+void setUserValues(int var[3], double a, double b, double c);
+
+// teleports player to new level
+level* teleport(level* currentLevel);

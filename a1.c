@@ -100,6 +100,7 @@ extern void getUserColour(int, GLfloat *, GLfloat *, GLfloat *, GLfloat *,
 // variables to keep track of time
    struct timeval t1, t2, t3, t4;
    int firstRun = 1;
+   level *currentLevel;
 
 	/*** collisionResponse() ***/
 	/* -performs collision detection and response */
@@ -111,6 +112,7 @@ void collisionResponse() {
 
 	/* your code for collisions goes here */
    handleCollision();
+   currentLevel = teleport(currentLevel);
 }
 
 
@@ -265,19 +267,19 @@ createTube(2, -xx, -yy, -zz, -xx-((x-xx)*25.0), -yy-((y-yy)*25.0), -zz-((z-zz)*2
       // add gravity
       if (elapsedTime > 20.0) {
          getViewPosition(&x, &y, &z);
+         //printf("%f %f %f \n", x,y,z);
          if(world[(int)floor(-x)][(int)floor(-(y))][(int)floor(-z)] == 0){ 
             y+=0.1;
-            if (world[(int)floor(-x)][(int)floor(-(y))][(int)floor(-z)] != 0) {
-               y = floor(y);
-            }
+            
             if (elapsedTime3 > 1000.0 && firstRun == 1) {
                firstRun = 0;
             }
-            if (firstRun == 0) {
+
+            if (world[(int)floor(-x)][(int)floor(-(y))][(int)floor(-z)] != 0) {
+               y = floor(y);
+            } else if (firstRun == 0) {
                handleGravityCollision();
-               //handleCollision();
             }
-           
          }
          getViewPosition(&x, &yy, &z);
          setViewPosition(x, y, z);
@@ -374,10 +376,10 @@ int i, j, k;
    setColors();
 
    // setup level
-   level *currentLevel = initNewLevel(NULL,0);
+   currentLevel = initNewLevel(NULL,0);
 
    // creates first level
-   createLevel(currentLevel);
+   createLevel(currentLevel, 1);
 
    // start timer
    gettimeofday(&t1, NULL);
