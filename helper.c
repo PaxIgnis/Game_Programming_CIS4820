@@ -18,28 +18,28 @@ extern void getViewPosition(float*, float*, float*);
 extern void getOldViewPosition(float*, float*, float*);
 extern void setOldViewPosition(float, float, float);
 extern void setViewOrientation(float, float, float);
-extern void getViewOrientation(float *, float *, float *);
+extern void getViewOrientation(float*, float*, float*);
 extern int setUserColour(int, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat,
     GLfloat, GLfloat, GLfloat);
 
 
-/* 
- * Function: 
+/*
+ * Function:
  * -------------------
- * 
+ *
  */
 
 
-/* 
- * Function: loadLevel
- * -------------------
- * 
- * Loads level from stored level struct into the world
- * Assumes that world array has already been cleared
- * 
- * newLevel: the pointer pointing to the struct that holds level data
- * 
- */
+ /*
+  * Function: loadLevel
+  * -------------------
+  *
+  * Loads level from stored level struct into the world
+  * Assumes that world array has already been cleared
+  *
+  * newLevel: the pointer pointing to the struct that holds level data
+  *
+  */
 void loadLevel(level* newLevel) {
     for (int i = 0; i < WORLDX; i++) {
         for (int j = 0; j < WORLDY; j++) {
@@ -48,14 +48,14 @@ void loadLevel(level* newLevel) {
             }
         }
     }
-    setViewPosition(newLevel->lastLocation[0]+1,newLevel->lastLocation[1]-1,newLevel->lastLocation[2]+1);
-    setViewOrientation(newLevel->lastOrientation[0],newLevel->lastOrientation[1]-1,newLevel->lastOrientation[2]);
+    setViewPosition(newLevel->lastLocation[0] + 0.5, newLevel->lastLocation[1] - 1, newLevel->lastLocation[2] + 0.5);
+    setViewOrientation(newLevel->lastOrientation[0], newLevel->lastOrientation[1], newLevel->lastOrientation[2]);
 }
 
-/* 
+/*
  * Function: clearWorld
  * Cleans world, setting all values to 0
- * 
+ *
  */
 void clearWorld() {
     // clears world array
@@ -68,29 +68,29 @@ void clearWorld() {
     }
 }
 
-/* 
+/*
  * Function: createOutdoorLevel
  * -------------------
- * 
+ *
  * Creates an outdoor level
- * 
+ *
  * currentLevel: pointer to struct to store new level
  * direction: int that tracks which direction the teleport blocks
  *            should go to. If direction is larger than 0 then there will
  *            be a single teleport block to go up to the next leve. If direction
- *            is less than 0 then there will be a single teleport cube to go down. 
+ *            is less than 0 then there will be a single teleport cube to go down.
  *            If direction == 0 then there will be 2 teleport cubes, one going up and
  *            the other going down.
- * 
+ *
  */
 void createOutdoorLevel(level* currentLevel, int direction) {
     /* build a red platform */
-    for(int i=0; i<WORLDX; i++) {
-        for(int j=0; j<WORLDZ; j++) {
-        world[i][24][j] = 3;
+    for (int i = 0; i < WORLDX; i++) {
+        for (int j = 0; j < WORLDZ; j++) {
+            world[i][24][j] = 3;
         }
     }
-    setViewPosition(-10,-26,-10);
+    setViewPosition(-10, -26, -10);
     setViewOrientation(0, 135, 0);
 
     // sets teleport block(s)
@@ -105,30 +105,30 @@ void createOutdoorLevel(level* currentLevel, int direction) {
     saveLevel(currentLevel);
 }
 
-/* 
+/*
  * Function: currentLevel
  * -------------------
- * 
+ *
  * Checks if player is on teleport cube
  * If they are it creates/loads new level and places user in it
- * 
+ *
  * currentLevel: pointer to struct of current level
- * 
+ *
  * return: pointer to struct containing new level
- * 
+ *
  */
 level* teleport(level* currentLevel) {
-    float x,y,z;
+    float x, y, z;
     level* newLevel;
-    getViewPosition(&x,&y,&z);
-    x=-x;
-    y=-y;
-    z=-z;
-    
+    getViewPosition(&x, &y, &z);
+    x = -x;
+    y = -y;
+    z = -z;
+
     // if standing on teleport cube
     // #5 is white going up cube
     // #21 is grey going down cube
-    if (world[(int)floor(x)][(int)floor(y-1)][(int)floor(z)] == 5) {
+    if (world[(int)floor(x)][(int)floor(y - 1)][(int)floor(z)] == 5) {
         // going up
         saveLevel(currentLevel);
         clearWorld();
@@ -143,7 +143,7 @@ level* teleport(level* currentLevel) {
             loadLevel(newLevel);
         }
         return newLevel;
-    } else if (world[(int)floor(x)][(int)floor(y-1)][(int)floor(z)] == 21) {
+    } else if (world[(int)floor(x)][(int)floor(y - 1)][(int)floor(z)] == 21) {
         // going down
         saveLevel(currentLevel);
         clearWorld();
@@ -162,19 +162,19 @@ level* teleport(level* currentLevel) {
     return currentLevel;
 }
 
-/* 
+/*
  * Function: saveLevel
  * -------------------
- * 
- * Saves all cubes and current player location into 
+ *
+ * Saves all cubes and current player location into
  * the level struct
- * 
+ *
  * currentLevel: pointer to current level struct
- * 
+ *
  */
 void saveLevel(level* currentLevel) {
-    float x,y,z;
-    
+    float x, y, z;
+
     // saves world array actual vals
     for (int i = 0; i < WORLDX; i++) {
         for (int j = 0; j < WORLDY; j++) {
@@ -185,23 +185,23 @@ void saveLevel(level* currentLevel) {
     }
 
     // saves user position and orientation in the level struct
-    getViewPosition(&x,&y,&z);
+    getViewPosition(&x, &y, &z);
     setUserValues(currentLevel->lastLocation, x, y, z);
-    getViewOrientation(&x,&y,&z);
+    getViewOrientation(&x, &y, &z);
     setUserValues(currentLevel->lastOrientation, x, y, z);
 }
 
-/* 
+/*
  * Function: setUserValues
  * -------------------
- * 
+ *
  * shortcut to update an array with 3 doubles
- * 
+ *
  * var: array that holds 3 doubles
  * a: first double to store
  * b: second double to store
  * c: third double to store
- * 
+ *
  */
 void setUserValues(int var[3], double a, double b, double c) {
     var[0] = a;
@@ -209,19 +209,19 @@ void setUserValues(int var[3], double a, double b, double c) {
     var[2] = c;
 }
 
-/* 
+/*
  * Function: initNewLevel
  * -------------------
- * 
+ *
  * Creates a new level structure to store the level,
  * adds it to list of levels, uses direction to store
  * the new levels in the up or down direction.
- * 
+ *
  * currentPos: struct containing current level
  * direction: int that tracks which direction user is moving in
  *            if it is positive, the new level is up
  *            if it is negative, the new level is down
- * 
+ *
  * return: pointer to struct for new level
  */
 level* initNewLevel(level* currentPos, int direction) {
@@ -229,7 +229,7 @@ level* initNewLevel(level* currentPos, int direction) {
     if (currentPos == NULL) {
         l->up = NULL;
         l->down = NULL;
-        
+
     } else if (direction > 0) {
         currentPos->up = l;
         l->up = NULL;
@@ -251,21 +251,21 @@ level* initNewLevel(level* currentPos, int direction) {
     return l;
 }
 
-/* 
+/*
  * Function: createDungeonLevel
  * -------------------
- * 
+ *
  * Creates a dungeon level and sets player in one of the rooms.
  * Direction controls the teleport blocks
- * 
+ *
  * currentLevel: pointer to struct to store new level
  * direction: int that tracks which direction the teleport blocks
  *            should go to. If direction is larger than 0 then there will
  *            be a single teleport block to go up to the next leve. If direction
- *            is less than 0 then there will be a single teleport cube to go down. 
+ *            is less than 0 then there will be a single teleport cube to go down.
  *            If direction == 0 then there will be 2 teleport cubes, one going up and
  *            the other going down.
- * 
+ *
  */
 void createDungeonLevel(level* currentLevel, int direction) {
     // array to store 2D world
@@ -307,10 +307,6 @@ void createDungeonLevel(level* currentLevel, int direction) {
     for (int i = 0; i < 9; i++) {
         // build walls along x axis (including corners)
         for (int j = startingPoints[i][0]; j < (startingPoints[i][0] + roomSizes[i][0] + 2); j++) {
-            // for (int k = 0; k < 5; k++) {
-            //     world[j][25 + k][startingPoints[i][1]] = (rand() % (15 + 1 - 11)) + 11;
-            //     world[j][25 + k][startingPoints[i][1] + roomSizes[i][1] + 1] = (rand() % (15 + 1 - 11)) + 11;
-            // }
             worldLegend[j][0][startingPoints[i][1]] = WALL;
             worldLegend[j][0][startingPoints[i][1] + roomSizes[i][1] + 1] = WALL;
             if (j > startingPoints[i][0] && j < (startingPoints[i][0] + roomSizes[i][0] + 1)) {
@@ -321,10 +317,6 @@ void createDungeonLevel(level* currentLevel, int direction) {
         }
         // build walls along z axis
         for (int j = startingPoints[i][1] + 1; j < (startingPoints[i][1] + roomSizes[i][1] + 1); j++) {
-            // for (int k = 0; k < 5; k++) {
-            //     world[startingPoints[i][0]][25 + k][j] = (rand() % (15 + 1 - 11)) + 11;
-            //     world[startingPoints[i][0] + roomSizes[i][0] + 1][25 + k][j] = (rand() % (15 + 1 - 11)) + 11;
-            // }
             worldLegend[startingPoints[i][0]][0][j] = WALL;
             worldLegend[startingPoints[i][0] + roomSizes[i][0] + 1][0][j] = WALL;
         }
@@ -460,7 +452,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
             worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
             worldLegend[x + 1][0][z] = CORRIDORFLOOR;
             worldLegend[x + 2][0][z] = CORRIDORFLOOR;
-            worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x+3][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
+            worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x + 3][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
         }
     }
 
@@ -502,7 +494,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
             worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
             worldLegend[x][0][z + 1] = CORRIDORFLOOR;
             worldLegend[x][0][z + 2] = CORRIDORFLOOR;
-            worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z+3] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
+            worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z + 3] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
         }
 
         // build join
@@ -592,26 +584,24 @@ void createDungeonLevel(level* currentLevel, int direction) {
             worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
             worldLegend[x][0][z + 1] = CORRIDORFLOOR;
             worldLegend[x][0][z + 2] = CORRIDORFLOOR;
-            worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z+3] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
+            worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z + 3] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
         }
     }
 
     // build items from legend
     for (int i = 0; i < WORLDX; i++) {
         for (int j = 0; j < WORLDZ; j++) {
+            // build walls
             if (worldLegend[i][0][j] == CORRIDORWALL || worldLegend[i][0][j] == WALL) {
                 for (k = 0; k < 5; k++) {
-                    //world[i][25 + k][j] = (rand() % (15 + 1 - 11)) + 11;
-                    // if ((!(i % 2 == 0) && (j % 2 == 0) && (k % 2 == 0)) || ((i % 2 == 0) && !(j % 2 == 0) && (k % 2 == 0)) || 
-                    // ((i % 2 == 0) && (j % 2 == 0) && !(k % 2 == 0)) || ((i % 2 == 0) && !(j % 2 == 0) && !(k % 2 == 0)) ||
-                    // (!(i % 2 == 0) && (j % 2 == 0) && !(k % 2 == 0)) || (!(i % 2 == 0) && !(j % 2 == 0) && (k % 2 == 0))) {
-                    if (((k % 2 == 0) && ((i+j) % 2 != 0)) || ((k % 2 != 0) && ((i+j) % 2 == 0))) {
+                    if (((k % 2 == 0) && ((i + j) % 2 != 0)) || ((k % 2 != 0) && ((i + j) % 2 == 0))) {
                         world[i][25 + k][j] = 26;
                     } else {
                         world[i][25 + k][j] = 27;
                     }
                 }
             }
+            // build doorway (seperate color for better visibility)
             if (worldLegend[i][0][j] == DOORWAYPOST) {
                 for (k = 0; k < 5; k++) {
                     if (k % 2 == 0) {
@@ -621,10 +611,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
                     }
                 }
             }
-            // if (worldLegend[i][0][j] == CORRIDORFLOOR) {
-            //     world[i][25][j] = (rand() % (5 + 1 - 4)) + 4;
-            //     world[i][29][j] = (rand() % (15 + 1 - 11)) + 11;
-            // }
+            // build floor and random cubes
             if (worldLegend[i][0][j] == FLOOR || worldLegend[i][0][j] == CORRIDORFLOOR) {
                 // sets random blocks
                 if (((rand() % (65 + 1 - 1)) + 1) == 1 && worldLegend[i][0][j] == FLOOR) {
@@ -637,10 +624,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
                     world[i][25][j] = 23;
                     world[i][29][j] = 23;
                 }
-                // world[i][25][j] = (rand() % (20 + 1 - 16)) + 16;
-                // world[i][29][j] = (rand() % (15 + 1 - 11)) + 11;
             }
-
             currentLevel->worldLegend[i][0][j][0] = worldLegend[i][0][j];
         }
     }
@@ -650,6 +634,15 @@ void createDungeonLevel(level* currentLevel, int direction) {
     setViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
     setOldViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
     setViewOrientation(0, 135, 0);
+
+    // clears cubes from around player spawn
+    for (i = startingPoints[room][0]; i < startingPoints[room][0] + 6; i++) {
+        for (j = startingPoints[room][1]; j < startingPoints[room][1] + 6; j++) {
+            if (world[i][26][j] == 10) {
+                world[i][26][j] == 0;
+            }
+        }
+    }
 
     // sets teleport block(s)
     if (direction > 0) {
@@ -675,12 +668,12 @@ void createDungeonLevel(level* currentLevel, int direction) {
     setUserValues(currentLevel->lastOrientation, 0, 135, 0);
 }
 
-/* 
+/*
  * Function: setColors
  * -------------------
- * 
+ *
  * Sets all of the custom colors
- * 
+ *
  */
 void setColors() {
     /* Set colors */
@@ -724,42 +717,42 @@ void setColors() {
     setUserColour(27, 0.0 / 255.0, 70.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 70.0 / 255.0, 0.0 / 255.0, 1.0);
 }
 
-/* 
+/*
  * Function: handleGravityCollision
  * -------------------
- * 
+ *
  * Handles collisions when user is falling (in motion)
  * Used to prevent clipping when user jumps off blocks.
- * 
+ *
  */
 void handleGravityCollision() {
-    float x,y,z;
-    getViewPosition(&x,&y,&z);
+    float x, y, z;
+    getViewPosition(&x, &y, &z);
     x = -x;
     y = -y;
     z = -z;
-    if (world[(int)floor(x-0.3)][(int)y][(int)z] != 0) {
-        x = (ceil((x-0.3))+0.31);
+    if (world[(int)floor(x - 0.3)][(int)y][(int)z] != 0) {
+        x = (ceil((x - 0.3)) + 0.31);
     }
-    if (world[(int)x][(int)y][(int)floor((z-0.3))] != 0) {
-        z = (ceil(z-0.3)+0.31);
+    if (world[(int)x][(int)y][(int)floor((z - 0.3))] != 0) {
+        z = (ceil(z - 0.3) + 0.31);
     }
-    if (world[(int)floor((x+0.3))][(int)y][(int)z] != 0) {
-        x = (floor((x+0.3))-0.31);
+    if (world[(int)floor((x + 0.3))][(int)y][(int)z] != 0) {
+        x = (floor((x + 0.3)) - 0.31);
     }
-    if (world[(int)x][(int)y][(int)floor((z+0.3))] != 0) {
-        z = (floor((z+0.3))-0.31);
+    if (world[(int)x][(int)y][(int)floor((z + 0.3))] != 0) {
+        z = (floor((z + 0.3)) - 0.31);
     }
-    setViewPosition(-x,-y,-z);
+    setViewPosition(-x, -y, -z);
 }
 
-/* 
+/*
  * Function: handleCollision
  * -------------------
- * 
+ *
  * Handles collision. Detects blocks, and allows user to 'slide' along surfaces.
  * Speed is reduced when sliding to give the walls a 'sticky' feeling.
- * 
+ *
  */
 void handleCollision() {
     float x, y, z, nextx, nexty, nextz;
