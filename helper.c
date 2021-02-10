@@ -10,7 +10,7 @@
 #define CORRIDORWALL 1
 #define FLOOR 2
 #define CORRIDORFLOOR 3
-#define DOORWAY 4
+#define DOORWAYPOST 4
 
 extern GLubyte world[WORLDX][WORLDY][WORLDZ];
 extern void setViewPosition(float, float, float);
@@ -194,7 +194,7 @@ void createLevel(level* currentLevel, int direction) {
     int worldLegend[WORLDX][1][WORLDZ];
     int startingPoints[9][2]; // Room 0 is bottom left, room 1 is bottom middle...
     int roomSizes[9][2];
-    int i, j, k, x, z;
+    int i, j, k, x, z, block;
 
     // generate 9 rooms
     for (int i = 0; i < 3; i++) {
@@ -251,7 +251,7 @@ void createLevel(level* currentLevel, int direction) {
         }
     }
 
-    /* generate corridors that connect the doorways along z axis*/
+    /* generate corridors that connect the DOORWAYPOSTs along z axis*/
     for (int i = 1; i < 7; i++) {
         // generate corridors along z axis
         int firstRoom = ((double)(0.25 * (pow(-1, i))) * ((6 * (pow(-1, i)) * i - 7 * (pow(-1, i)) - 1))); // corridor on right side (pattern: 0,1,3,4,6,7)
@@ -265,8 +265,8 @@ void createLevel(level* currentLevel, int direction) {
         }
         worldLegend[rand1 + startingPoints[firstRoom][0] + 1][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = CORRIDORFLOOR;
         worldLegend[rand1 + startingPoints[firstRoom][0] + 2][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = CORRIDORFLOOR;
-        worldLegend[rand1 + startingPoints[firstRoom][0]][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = DOORWAY;
-        worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = DOORWAY;
+        worldLegend[rand1 + startingPoints[firstRoom][0]][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = DOORWAYPOST;
+        worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1] = DOORWAYPOST;
 
         // select left facing corridor openings
         int rand2 = rand() % (roomSizes[secondRoom][0] - 1);
@@ -274,10 +274,10 @@ void createLevel(level* currentLevel, int direction) {
             world[rand2 + startingPoints[secondRoom][0] + 1][25 + k][startingPoints[secondRoom][1]] = 0;
             world[rand2 + startingPoints[secondRoom][0] + 2][25 + k][startingPoints[secondRoom][1]] = 0;
         }
-        worldLegend[rand2 + startingPoints[secondRoom][0]][0][startingPoints[secondRoom][1]] = DOORWAY;
+        worldLegend[rand2 + startingPoints[secondRoom][0]][0][startingPoints[secondRoom][1]] = DOORWAYPOST;
         worldLegend[rand2 + startingPoints[secondRoom][0] + 1][0][startingPoints[secondRoom][1]] = CORRIDORFLOOR;
         worldLegend[rand2 + startingPoints[secondRoom][0] + 2][0][startingPoints[secondRoom][1]] = CORRIDORFLOOR;
-        worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][startingPoints[secondRoom][1]] = DOORWAY;
+        worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][startingPoints[secondRoom][1]] = DOORWAYPOST;
 
         // select random location between both doorways to insert connecting corridor
         int yDistBetween = (startingPoints[secondRoom][1]) - (startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1) - 1;
@@ -289,10 +289,10 @@ void createLevel(level* currentLevel, int direction) {
         for (int i = 0; i < randDist; i++) {
             int x = rand1 + startingPoints[firstRoom][0];
             int z = startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + i;
-            worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAY ? DOORWAY : CORRIDORWALL);
+            worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
             worldLegend[x + 1][0][z] = CORRIDORFLOOR;
             worldLegend[x + 2][0][z] = CORRIDORFLOOR;
-            worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x + 3][0][z] == DOORWAY ? DOORWAY : CORRIDORWALL);
+            worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x + 3][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
         }
         // build join
         if ((rand1 + startingPoints[firstRoom][0]) < (rand2 + startingPoints[secondRoom][0])) { // if left door lower than right door
@@ -300,12 +300,14 @@ void createLevel(level* currentLevel, int direction) {
             // build top/bottom of join
             for (int j = 0; j < 3; j++) {
                 if ((randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j) < startingPoints[secondRoom][1]) {
-                    if (worldLegend[rand1 + startingPoints[firstRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] != CORRIDORFLOOR) {
+                    block = worldLegend[rand1 + startingPoints[firstRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[rand1 + startingPoints[firstRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] = CORRIDORWALL;
                     }
                 }
                 if ((randDist + j) > 0) {
-                    if (worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] != CORRIDORFLOOR) {
+                    block = worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[rand2 + startingPoints[secondRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] = CORRIDORWALL;
                     }
                 }
@@ -314,13 +316,15 @@ void createLevel(level* currentLevel, int direction) {
             for (int i = 0; i < xDistBetween + 4; i++) {
                 // left side
                 if (i > 2) {
-                    if (worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] != CORRIDORFLOOR) {
+                    block = worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] = CORRIDORWALL;
                     }
                 }
                 // right side
                 if (i < xDistBetween + 1) {
-                    if (worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] != CORRIDORFLOOR) {
+                    block = worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[rand1 + startingPoints[firstRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] = CORRIDORWALL;
                     }
                 }
@@ -335,12 +339,14 @@ void createLevel(level* currentLevel, int direction) {
             // build top/bottom of join
             for (int j = 0; j < 3; j++) {
                 if ((randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j) < startingPoints[secondRoom][1]) {
-                    if (worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] != CORRIDORFLOOR) {
+                    block = worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[rand1 + startingPoints[firstRoom][0] + 3][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 2 + j] = CORRIDORWALL;
                     }
                 }
                 if ((randDist + j) > 0) {
-                    if (worldLegend[rand2 + startingPoints[secondRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] != CORRIDORFLOOR) {
+                    block = worldLegend[rand2 + startingPoints[secondRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[rand2 + startingPoints[secondRoom][0]][0][randDist + startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + j] = CORRIDORWALL;
                     }
                 }
@@ -349,13 +355,15 @@ void createLevel(level* currentLevel, int direction) {
             for (int i = 0; i < xDistBetween + 4; i++) {
                 // left side
                 if (i < xDistBetween + 1) {
-                    if (worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] != CORRIDORFLOOR) {
+                    block = worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 1 + randDist] = CORRIDORWALL;
                     }
                 }
                 // right side
                 if (i > 2) {
-                    if (worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] != CORRIDORFLOOR) {
+                    block = worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[rand2 + startingPoints[secondRoom][0] + i][0][startingPoints[firstRoom][1] + roomSizes[firstRoom][1] + 4 + randDist] = CORRIDORWALL;
                     }
                 }
@@ -370,10 +378,10 @@ void createLevel(level* currentLevel, int direction) {
         for (int i = 1; i < yDistBetween - randDist - 1; i++) {
             int x = rand2 + startingPoints[secondRoom][0];
             int z = startingPoints[secondRoom][1] - i;
-            worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAY ? DOORWAY : CORRIDORWALL);
+            worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
             worldLegend[x + 1][0][z] = CORRIDORFLOOR;
             worldLegend[x + 2][0][z] = CORRIDORFLOOR;
-            worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x+3][0][z] == DOORWAY ? DOORWAY : CORRIDORWALL);
+            worldLegend[x + 3][0][z] = worldLegend[x + 3][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x+3][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
         }
     }
 
@@ -389,20 +397,20 @@ void createLevel(level* currentLevel, int direction) {
             world[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][25 + k][rand1 + startingPoints[firstRoom][1] + 1] = 0;
             world[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][25 + k][rand1 + startingPoints[firstRoom][1] + 2] = 0;
         }
-        worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1]] = DOORWAY;
+        worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1]] = DOORWAYPOST;
         worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 1] = CORRIDORFLOOR;
         worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 2] = CORRIDORFLOOR;
-        worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 3] = DOORWAY;
+        worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1][0][rand1 + startingPoints[firstRoom][1] + 3] = DOORWAYPOST;
         // select down facing corridor openings
         int rand2 = rand() % (roomSizes[secondRoom][1] - 1);
         for (int k = 0; k < 5; k++) {
             world[startingPoints[secondRoom][0]][25 + k][rand2 + startingPoints[secondRoom][1] + 1] = 0;
             world[startingPoints[secondRoom][0]][25 + k][rand2 + startingPoints[secondRoom][1] + 2] = 0;
         }
-        worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1]] = DOORWAY;
+        worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1]] = DOORWAYPOST;
         worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 1] = CORRIDORFLOOR;
         worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 2] = CORRIDORFLOOR;
-        worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 3] = DOORWAY;
+        worldLegend[startingPoints[secondRoom][0]][0][rand2 + startingPoints[secondRoom][1] + 3] = DOORWAYPOST;
 
         // select random location between both doorways to insert connecting corridor
         int yDistBetween = (startingPoints[secondRoom][0]) - (startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1) - 1;
@@ -412,10 +420,10 @@ void createLevel(level* currentLevel, int direction) {
         for (int i = 0; i < randDist; i++) {
             int x = startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + i;
             int z = rand1 + startingPoints[firstRoom][1];
-            worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAY ? DOORWAY : CORRIDORWALL);
+            worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
             worldLegend[x][0][z + 1] = CORRIDORFLOOR;
             worldLegend[x][0][z + 2] = CORRIDORFLOOR;
-            worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z+3] == DOORWAY ? DOORWAY : CORRIDORWALL);
+            worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z+3] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
         }
 
         // build join
@@ -424,12 +432,14 @@ void createLevel(level* currentLevel, int direction) {
             // build right/left of join
             for (int j = 0; j < 3; j++) {
                 if ((randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j) < startingPoints[secondRoom][0]) {
-                    if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1]] != CORRIDORFLOOR) {
+                    block = worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1]];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1]] = CORRIDORWALL;
                     }
                 }
                 if ((randDist + j) > 0) {
-                    if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1] + 3] != CORRIDORFLOOR) {
+                    block = worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1] + 3];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1] + 3] = CORRIDORWALL;
                     }
                 }
@@ -438,13 +448,15 @@ void createLevel(level* currentLevel, int direction) {
             for (int i = 0; i < xDistBetween + 4; i++) {
                 // bottom side
                 if (i > 2) {
-                    if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] != CORRIDORFLOOR) {
+                    block = worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand1 + startingPoints[firstRoom][1] + i];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = CORRIDORWALL;
                     }
                 }
                 // top side
                 if (i < xDistBetween + 1) {
-                    if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] != CORRIDORFLOOR) {
+                    block = worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand1 + startingPoints[firstRoom][1] + i];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand1 + startingPoints[firstRoom][1] + i] = CORRIDORWALL;
                     }
                 }
@@ -459,12 +471,14 @@ void createLevel(level* currentLevel, int direction) {
             // build left/right of join
             for (int j = 0; j < 3; j++) {
                 if ((randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j) < startingPoints[secondRoom][0]) {
-                    if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1] + 3] != CORRIDORFLOOR) {
+                    block = worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1] + 3];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 2 + j][0][rand1 + startingPoints[firstRoom][1] + 3] = CORRIDORWALL;
                     }
                 }
                 if ((randDist + j) > 0) {
-                    if (worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1]] != CORRIDORFLOOR) {
+                    block = worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1]];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[randDist + startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + j][0][rand2 + startingPoints[secondRoom][1]] = CORRIDORWALL;
                     }
                 }
@@ -473,13 +487,15 @@ void createLevel(level* currentLevel, int direction) {
             for (int i = 0; i < xDistBetween + 4; i++) {
                 // bottom side
                 if (i < xDistBetween + 1) {
-                    if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] != CORRIDORFLOOR) {
+                    block = worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand2 + startingPoints[secondRoom][1] + i];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 1 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = CORRIDORWALL;
                     }
                 }
                 // top side
                 if (i > 2) {
-                    if (worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] != CORRIDORFLOOR) {
+                    block = worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand2 + startingPoints[secondRoom][1] + i];
+                    if (block != CORRIDORFLOOR && block != DOORWAYPOST) {
                         worldLegend[startingPoints[firstRoom][0] + roomSizes[firstRoom][0] + 4 + randDist][0][rand2 + startingPoints[secondRoom][1] + i] = CORRIDORWALL;
                     }
                 }
@@ -494,10 +510,10 @@ void createLevel(level* currentLevel, int direction) {
         for (int i = 1; i < yDistBetween - randDist - 1; i++) {
             int x = startingPoints[secondRoom][0] - i;
             int z = rand2 + startingPoints[secondRoom][1];
-            worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAY ? DOORWAY : CORRIDORWALL);
+            worldLegend[x][0][z] = worldLegend[x][0][z] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
             worldLegend[x][0][z + 1] = CORRIDORFLOOR;
             worldLegend[x][0][z + 2] = CORRIDORFLOOR;
-            worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z+3] == DOORWAY ? DOORWAY : CORRIDORWALL);
+            worldLegend[x][0][z + 3] = worldLegend[x][0][z + 3] == CORRIDORFLOOR ? CORRIDORFLOOR : (worldLegend[x][0][z+3] == DOORWAYPOST ? DOORWAYPOST : CORRIDORWALL);
         }
     }
 
@@ -517,7 +533,7 @@ void createLevel(level* currentLevel, int direction) {
                     }
                 }
             }
-            if (worldLegend[i][0][j] == DOORWAY) {
+            if (worldLegend[i][0][j] == DOORWAYPOST) {
                 for (k = 0; k < 5; k++) {
                     if (k % 2 == 0) {
                         world[i][25 + k][j] = 24;
