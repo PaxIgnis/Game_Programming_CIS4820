@@ -23,10 +23,22 @@ extern int setUserColour(int, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat,
     GLfloat, GLfloat, GLfloat);
 
 
+/* 
+ * Function: 
+ * -------------------
+ * 
+ */
 
-/*
- * Loads level from memory into world
- * Assumes that world has already been cleared
+
+/* 
+ * Function: loadLevel
+ * -------------------
+ * 
+ * Loads level from stored level struct into the world
+ * Assumes that world array has already been cleared
+ * 
+ * newLevel: the pointer pointing to the struct that holds level data
+ * 
  */
 void loadLevel(level* newLevel) {
     for (int i = 0; i < WORLDX; i++) {
@@ -40,9 +52,9 @@ void loadLevel(level* newLevel) {
     setViewOrientation(newLevel->lastOrientation[0],newLevel->lastOrientation[1]-1,newLevel->lastOrientation[2]);
 }
 
-/*
+/* 
+ * Function: clearWorld
  * Cleans world, setting all values to 0
- * 
  * 
  */
 void clearWorld() {
@@ -56,10 +68,22 @@ void clearWorld() {
     }
 }
 
-/*
- * Creates new outdoor level
+/* 
+ * Function: createOutdoorLevel
+ * -------------------
+ * 
+ * Creates an outdoor level
+ * 
+ * currentLevel: pointer to struct to store new level
+ * direction: int that tracks which direction the teleport blocks
+ *            should go to. If direction is larger than 0 then there will
+ *            be a single teleport block to go up to the next leve. If direction
+ *            is less than 0 then there will be a single teleport cube to go down. 
+ *            If direction == 0 then there will be 2 teleport cubes, one going up and
+ *            the other going down.
+ * 
  */
-void createOutdoorLevel(level* currentLevel) {
+void createOutdoorLevel(level* currentLevel, int direction) {
     /* build a red platform */
     for(int i=0; i<WORLDX; i++) {
         for(int j=0; j<WORLDZ; j++) {
@@ -68,13 +92,29 @@ void createOutdoorLevel(level* currentLevel) {
     }
     setViewPosition(-10,-26,-10);
     setViewOrientation(0, 135, 0);
-    world[12][25][12] = 21;
+
+    // sets teleport block(s)
+    if (direction > 0) {
+        world[12][25][10] = 5;
+    } else if (direction < 0) {
+        world[10][25][12] = 21;
+    } else {
+        world[12][25][10] = 5;
+        world[10][25][12] = 21;
+    }
     saveLevel(currentLevel);
 }
 
 /* 
+ * Function: currentLevel
+ * -------------------
+ * 
  * Checks if player is on teleport cube
  * If they are it creates/loads new level and places user in it
+ * 
+ * currentLevel: pointer to struct of current level
+ * 
+ * return: pointer to struct containing new level
  * 
  */
 level* teleport(level* currentLevel) {
@@ -86,6 +126,8 @@ level* teleport(level* currentLevel) {
     z=-z;
     
     // if standing on teleport cube
+    // #5 is white going up cube
+    // #21 is grey going down cube
     if (world[(int)floor(x)][(int)floor(y-1)][(int)floor(z)] == 5) {
         // going up
         saveLevel(currentLevel);
@@ -93,38 +135,42 @@ level* teleport(level* currentLevel) {
         if (currentLevel->up == NULL) {
             // create new level
             newLevel = initNewLevel(currentLevel, 1);
-            createOutdoorLevel(newLevel);
-
+            // Logic will go here to choose new level type(s) in upcoming assignments
+            createOutdoorLevel(newLevel, 0);
         } else {
             // load level from memory
+            newLevel = currentLevel->up;
+            loadLevel(newLevel);
         }
-        //printf("up: %p, down: %p\n", (void*)newLevel->up, (void*)newLevel->down);
         return newLevel;
     } else if (world[(int)floor(x)][(int)floor(y-1)][(int)floor(z)] == 21) {
         // going down
         saveLevel(currentLevel);
         clearWorld();
         if (currentLevel->down == NULL) {
-            printf("not loading new level\n");
             // create new level
-            //level* newLevel = initNewLevel(currentLevel, 1);
-            //createOutdoorLevel(newLevel);
+            newLevel = initNewLevel(currentLevel, -1);
+            createDungeonLevel(newLevel, 0);
 
         } else {
-            printf("loading new level\n");
             // load level from memory
             newLevel = currentLevel->down;
             loadLevel(newLevel);
         }
-        printf("loading new levels\n");
-        //printf("up: %p, down: %p\n", (void*)newLevel->up, (void*)newLevel->down);
         return newLevel;
     }
     return currentLevel;
 }
 
-/*
- * Save level
+/* 
+ * Function: saveLevel
+ * -------------------
+ * 
+ * Saves all cubes and current player location into 
+ * the level struct
+ * 
+ * currentLevel: pointer to current level struct
+ * 
  */
 void saveLevel(level* currentLevel) {
     float x,y,z;
@@ -146,7 +192,16 @@ void saveLevel(level* currentLevel) {
 }
 
 /* 
- * Shortcut to update array
+ * Function: setUserValues
+ * -------------------
+ * 
+ * shortcut to update an array with 3 doubles
+ * 
+ * var: array that holds 3 doubles
+ * a: first double to store
+ * b: second double to store
+ * c: third double to store
+ * 
  */
 void setUserValues(int var[3], double a, double b, double c) {
     var[0] = a;
@@ -154,9 +209,20 @@ void setUserValues(int var[3], double a, double b, double c) {
     var[2] = c;
 }
 
-/* Creates a new level structure to store the level,
+/* 
+ * Function: initNewLevel
+ * -------------------
+ * 
+ * Creates a new level structure to store the level,
  * adds it to list of levels, uses direction to store
  * the new levels in the up or down direction.
+ * 
+ * currentPos: struct containing current level
+ * direction: int that tracks which direction user is moving in
+ *            if it is positive, the new level is up
+ *            if it is negative, the new level is down
+ * 
+ * return: pointer to struct for new level
  */
 level* initNewLevel(level* currentPos, int direction) {
     level* l = (level*)malloc(sizeof(level));
@@ -185,12 +251,25 @@ level* initNewLevel(level* currentPos, int direction) {
     return l;
 }
 
-/*
- * Creates a level and sets player in one of the rooms.
+/* 
+ * Function: createDungeonLevel
+ * -------------------
+ * 
+ * Creates a dungeon level and sets player in one of the rooms.
+ * Direction controls the teleport blocks
+ * 
+ * currentLevel: pointer to struct to store new level
+ * direction: int that tracks which direction the teleport blocks
+ *            should go to. If direction is larger than 0 then there will
+ *            be a single teleport block to go up to the next leve. If direction
+ *            is less than 0 then there will be a single teleport cube to go down. 
+ *            If direction == 0 then there will be 2 teleport cubes, one going up and
+ *            the other going down.
  * 
  */
-void createLevel(level* currentLevel, int direction) {
+void createDungeonLevel(level* currentLevel, int direction) {
     // array to store 2D world
+    int minimumRoomSize = 6; // measured inside length
     int worldLegend[WORLDX][1][WORLDZ];
     int startingPoints[9][2]; // Room 0 is bottom left, room 1 is bottom middle...
     int roomSizes[9][2];
@@ -201,8 +280,8 @@ void createLevel(level* currentLevel, int direction) {
         for (int j = 0; j < 3; j++) {
 
             // generate random room size that fits each of the quadrants
-            x = (rand() % (30 - 3 + 1)) + 3;
-            z = (rand() % (30 - 3 + 1)) + 3;
+            x = (rand() % (30 - minimumRoomSize + 1)) + minimumRoomSize;
+            z = (rand() % (30 - minimumRoomSize + 1)) + minimumRoomSize;
             roomSizes[(3 * j) + i][0] = x;
             roomSizes[(3 * j) + i][1] = z;
 
@@ -572,10 +651,14 @@ void createLevel(level* currentLevel, int direction) {
     setOldViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
     setViewOrientation(0, 135, 0);
 
+    // sets teleport block(s)
     if (direction > 0) {
-        world[startingPoints[room][0] + 3][26][startingPoints[room][1] + 3] = 5;
+        world[startingPoints[room][0] + 4][26][startingPoints[room][1] + 2] = 5;
+    } else if (direction < 0) {
+        world[startingPoints[room][0] + 2][26][startingPoints[room][1] + 4] = 21;
     } else {
-        world[startingPoints[room][0] + 3][26][startingPoints[room][1] + 3] = 21;
+        world[startingPoints[room][0] + 4][26][startingPoints[room][1] + 2] = 5;
+        world[startingPoints[room][0] + 2][26][startingPoints[room][1] + 4] = 21;
     }
 
     // updates world array actual vals
@@ -592,10 +675,12 @@ void createLevel(level* currentLevel, int direction) {
     setUserValues(currentLevel->lastOrientation, 0, 135, 0);
 }
 
-/*
- * Generates all colors needed.
- *
- *
+/* 
+ * Function: setColors
+ * -------------------
+ * 
+ * Sets all of the custom colors
+ * 
  */
 void setColors() {
     /* Set colors */
@@ -639,8 +724,13 @@ void setColors() {
     setUserColour(27, 0.0 / 255.0, 70.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 70.0 / 255.0, 0.0 / 255.0, 1.0);
 }
 
-/*
- * Handle collision when falling
+/* 
+ * Function: handleGravityCollision
+ * -------------------
+ * 
+ * Handles collisions when user is falling (in motion)
+ * Used to prevent clipping when user jumps off blocks.
+ * 
  */
 void handleGravityCollision() {
     float x,y,z;
@@ -650,26 +740,26 @@ void handleGravityCollision() {
     z = -z;
     if (world[(int)floor(x-0.3)][(int)y][(int)z] != 0) {
         x = (ceil((x-0.3))+0.31);
-        printf("a\n");
     }
     if (world[(int)x][(int)y][(int)floor((z-0.3))] != 0) {
         z = (ceil(z-0.3)+0.31);
-        printf("b\n");
     }
     if (world[(int)floor((x+0.3))][(int)y][(int)z] != 0) {
         x = (floor((x+0.3))-0.31);
-        printf("c\n");
     }
     if (world[(int)x][(int)y][(int)floor((z+0.3))] != 0) {
         z = (floor((z+0.3))-0.31);
-        printf("d\n");
     }
     setViewPosition(-x,-y,-z);
 }
 
-/*
+/* 
+ * Function: handleCollision
+ * -------------------
+ * 
  * Handles collision. Detects blocks, and allows user to 'slide' along surfaces.
- *
+ * Speed is reduced when sliding to give the walls a 'sticky' feeling.
+ * 
  */
 void handleCollision() {
     float x, y, z, nextx, nexty, nextz;

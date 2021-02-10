@@ -15,7 +15,10 @@ typedef struct level {
 void clearWorld();
 
 // creates dungeon level
-void createLevel(level* currentLevel, int direction);
+void createDungeonLevel(level* currentLevel, int direction);
+
+// creates outdoor level
+void createOutdoorLevel(level* currentLevel, int direction);
 
 // handles collisions
 void handleCollision();
