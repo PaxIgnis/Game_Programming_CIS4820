@@ -99,7 +99,6 @@ extern void getUserColour(int, GLfloat *, GLfloat *, GLfloat *, GLfloat *,
 /********* end of extern variable declarations **************/
 // variables to keep track of time
    struct timeval t1, t2, t3, t4;
-   int firstRun = 1;
    level *currentLevel;
 
 	/*** collisionResponse() ***/
@@ -244,6 +243,7 @@ createTube(2, -xx, -yy, -zz, -xx-((x-xx)*25.0), -yy-((y-yy)*25.0), -zz-((z-zz)*2
 	   /* your code goes here */
       float x, y, z, yy;
       double r,g,b;
+      static int firstRun;
 
       gettimeofday(&t2, NULL);
       
@@ -271,19 +271,23 @@ createTube(2, -xx, -yy, -zz, -xx-((x-xx)*25.0), -yy-((y-yy)*25.0), -zz-((z-zz)*2
          if(world[(int)floor(-x)][(int)floor(-(y))][(int)floor(-z)] == 0){ 
             y+=0.1;
             
-            if (elapsedTime3 > 1000.0 && firstRun == 1) {
-               firstRun = 0;
+            if (elapsedTime3 > 500.0 && firstRun == 0) {
+               firstRun = 1;
             }
 
             if (world[(int)floor(-x)][(int)floor(-(y))][(int)floor(-z)] != 0) {
                y = floor(y);
-            } else if (firstRun == 0) {
+            } else if (firstRun == 1) {
                handleGravityCollision();
             }
          }
          getViewPosition(&x, &yy, &z);
          setViewPosition(x, y, z);
          gettimeofday(&t1, NULL);
+      }
+
+      if (currentLevel->worldType == OUTDOOR) {
+         animateClouds();
       }
    }
 }
@@ -379,7 +383,7 @@ int i, j, k;
    currentLevel = initNewLevel(NULL,0);
 
    // creates first level
-   createOutdoorLevel(currentLevel, 0);
+   createOutdoorLevel(currentLevel, -1);
 
    // start timer
    gettimeofday(&t1, NULL);

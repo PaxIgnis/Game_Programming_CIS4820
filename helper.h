@@ -9,7 +9,20 @@ typedef struct level {
     struct level *down;
     int lastLocation[3];
     int lastOrientation[3];
+    int worldType;
 } level;
+
+
+#define WALL 0
+#define CORRIDORWALL 1
+#define FLOOR 2
+#define CORRIDORFLOOR 3
+#define DOORWAYPOST 4
+#define DUNGEON 5
+#define OUTDOOR 6
+
+// moves clouds across sky
+void animateClouds();
 
 // clears world values
 void clearWorld();

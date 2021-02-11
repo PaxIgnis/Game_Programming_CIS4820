@@ -2,16 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <sys/time.h> 
 
 #include "graphics.h"
 #include "helper.h"
 #include "perlin.h"
-
-#define WALL 0
-#define CORRIDORWALL 1
-#define FLOOR 2
-#define CORRIDORFLOOR 3
-#define DOORWAYPOST 4
 
 extern GLubyte world[WORLDX][WORLDY][WORLDZ];
 extern void setViewPosition(float, float, float);
@@ -29,6 +24,46 @@ extern int setUserColour(int, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat,
  * -------------------
  *
  */
+
+/*
+ * Function: animateClouds
+ * -------------------
+ *
+ * called to move clouds across the sky
+ * 
+ */
+void animateClouds() {
+    static struct timeval t, t1;
+    static int i;
+
+    static int initialized;
+    if (initialized == 0) {
+        initialized = 1;
+        gettimeofday(&t, NULL);
+    }
+    gettimeofday(&t1, NULL);
+
+    double elapsedTime = (t1.tv_sec - t.tv_sec) * 1000.0; // sec to ms
+    elapsedTime += (t1.tv_usec - t.tv_usec) / 1000.0; // us to ms
+
+    if (elapsedTime > 150) {
+        for (int x = 0; x < WORLDX; x++) {
+            for (int z = 0; z < WORLDZ; z++) {
+                float height = perlin2d(x + i,z, 0.1, 1);
+                
+                if ((int)((float)height * 24.0) > 18) {
+                    world[x][40][z] = 5;
+                } else {
+                    world[x][40][z] = 0;
+                }
+            }
+        }
+        gettimeofday(&t, NULL);
+        i++;
+    }
+    
+
+}
 
 
  /*
@@ -55,6 +90,8 @@ void loadLevel(level* newLevel) {
 
 /*
  * Function: clearWorld
+ *  -------------------
+ * 
  * Cleans world, setting all values to 0
  *
  */
@@ -124,8 +161,8 @@ void createOutdoorLevel(level* currentLevel, int direction) {
     }
     
     // sets teleport block(s)
-    int xCoord = (rand() % (WORLDX - 5 + 5 - 1)) + 5;
-    int zCoord = (rand() % (WORLDZ - 5 + 5 - 1)) + 5;
+    int xCoord = (rand() % (WORLDX - 10)) + 5;
+    int zCoord = (rand() % (WORLDZ - 10)) + 5;
     if (direction > 0) {
         for (int i = WORLDY-1; i > 0; i--) {
             if (world[xCoord][i][zCoord] != 0) {
@@ -156,12 +193,12 @@ void createOutdoorLevel(level* currentLevel, int direction) {
     // places user spawn near teleport cubes
     for (int i = WORLDY-1; i > 0; i--) {
         if (world[xCoord-3][i][zCoord] != 0) {
-            setViewPosition(-(xCoord-3), -(i + 1), -(zCoord));
+            setViewPosition(-(xCoord-3), -(i + 5), -(zCoord));
             break;
         }
     }
     setViewOrientation(0, 135, 0);
-    
+    currentLevel->worldType = OUTDOOR;
     saveLevel(currentLevel);
 }
 
@@ -210,7 +247,8 @@ level* teleport(level* currentLevel) {
         if (currentLevel->down == NULL) {
             // create new level
             newLevel = initNewLevel(currentLevel, -1);
-            createDungeonLevel(newLevel, 0);
+            // Change the int argument to control number of teleport cubes
+            createDungeonLevel(newLevel, 1);
 
         } else {
             // load level from memory
@@ -692,6 +730,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
     // place player in random room
     int room = rand() % 9;
     setViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
+    handleGravityCollision();
     setOldViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
     setViewOrientation(0, 135, 0);
 
@@ -726,6 +765,8 @@ void createDungeonLevel(level* currentLevel, int direction) {
     // updates user position and orientation in the level struct
     setUserValues(currentLevel->lastLocation, -(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
     setUserValues(currentLevel->lastOrientation, 0, 135, 0);
+
+    currentLevel->worldType = DUNGEON;
 }
 
 /*
@@ -871,13 +912,16 @@ void handleCollision() {
         }
         // distance of next move
         float dist = fabs(sqrt(pow(xx - ((-newx + xx) * 2) - xx, 2) + pow(zz - ((-newz + zz) * 2) - zz, 2)));
-        // check if new location is inside a block
-        if (world[(int)floor(xx - ((-newx + xx) * 2))][(int)floor(yy)][(int)floor(zz - ((-newz + zz) * 2))] != 0 && world[(int)floor(xx - ((-newx + xx) * 2))][(int)floor(yy + 1)][(int)floor(zz - ((-newz + zz) * 2))] == 0) {
-            // move on top of single block
-            setViewPosition(-(xx - ((-newx + xx) * 2)), -(yy + 1), -(zz - ((-newz + zz) * 2)));
-        } else if (newx < 0 || newx > WORLDX || newz < 0 || newz > WORLDZ) {
+        // check out of bounds
+        if (((int)floor(xx - ((-newx + xx) * 2)) < 0 || (int)floor(xx - ((-newx + xx) * 2)) >= WORLDX ||
+            (int)floor(zz - ((-newz + zz) * 2)) < 0 || (int)floor(zz - ((-newz + zz) * 2)) >= WORLDZ)) {
             setViewPosition(-xx, -yy, -zz);
             break;
+            // check if new location is inside a block
+        } else if (world[(int)floor(xx - ((-newx + xx) * 2))][(int)floor(yy)][(int)floor(zz - ((-newz + zz) * 2))] != 0 && 
+            world[(int)floor(xx - ((-newx + xx) * 2))][(int)floor(yy + 1)][(int)floor(zz - ((-newz + zz) * 2))] == 0) {
+            // move on top of single block
+            setViewPosition(-(xx - ((-newx + xx) * 2)), -(yy + 1), -(zz - ((-newz + zz) * 2)));
         } else if (world[(int)floor(xx - ((-newx + xx) * 2))][(int)floor(yy)][(int)floor(zz - ((-newz + zz) * 2))] != 0) {
             // prevent 'sticking' to walls
             // split 360 degrees into 8 octants and check each one
