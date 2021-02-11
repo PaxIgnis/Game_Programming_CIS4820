@@ -5,6 +5,7 @@
 
 #include "graphics.h"
 #include "helper.h"
+#include "perlin.h"
 
 #define WALL 0
 #define CORRIDORWALL 1
@@ -72,7 +73,8 @@ void clearWorld() {
  * Function: createOutdoorLevel
  * -------------------
  *
- * Creates an outdoor level
+ * Creates an outdoor level using perlin. Places user spawn and
+ * teleportation cubes.
  *
  * currentLevel: pointer to struct to store new level
  * direction: int that tracks which direction the teleport blocks
@@ -84,24 +86,82 @@ void clearWorld() {
  *
  */
 void createOutdoorLevel(level* currentLevel, int direction) {
-    /* build a red platform */
+    // build terain using perlin
     for (int i = 0; i < WORLDX; i++) {
         for (int j = 0; j < WORLDZ; j++) {
-            world[i][24][j] = 3;
+            float height = perlin2d(i,j, 0.03, 4);
+            int adjustedHeight = (int)14 + ((float)height * 24.0);
+             if (((adjustedHeight % 2 == 0) && ((i + j) % 2 != 0)) || ((adjustedHeight % 2 != 0) && ((i + j) % 2 == 0))) {
+                 if (adjustedHeight <= 24) {
+                    world[i][adjustedHeight][j] = 22;
+                    world[i][adjustedHeight-1][j] = 22;
+                    world[i][adjustedHeight-2][j] = 22;
+                 } else if (adjustedHeight > 30) {
+                    world[i][adjustedHeight][j] = 30;
+                    world[i][adjustedHeight-1][j] = 30;
+                    world[i][adjustedHeight-2][j] = 30;
+                 } else {
+                    world[i][adjustedHeight][j] = 28;
+                    world[i][adjustedHeight-1][j] = 28;
+                    world[i][adjustedHeight-2][j] = 28;
+                 }
+            } else {
+               if (adjustedHeight <= 24) {
+                    world[i][adjustedHeight][j] = 23;
+                    world[i][adjustedHeight-1][j] = 23;
+                    world[i][adjustedHeight-2][j] = 23;
+                 } else if (adjustedHeight > 30) {
+                    world[i][adjustedHeight][j] = 31;
+                    world[i][adjustedHeight-1][j] = 31;
+                    world[i][adjustedHeight-2][j] = 31;
+                 } else {
+                    world[i][adjustedHeight][j] = 29;
+                    world[i][adjustedHeight-1][j] = 29;
+                    world[i][adjustedHeight-2][j] = 29;
+                 }
+            }
         }
     }
-    setViewPosition(-10, -26, -10);
-    setViewOrientation(0, 135, 0);
-
+    
     // sets teleport block(s)
+    int xCoord = (rand() % (WORLDX - 5 + 5 - 1)) + 5;
+    int zCoord = (rand() % (WORLDZ - 5 + 5 - 1)) + 5;
     if (direction > 0) {
-        world[12][25][10] = 5;
+        for (int i = WORLDY-1; i > 0; i--) {
+            if (world[xCoord][i][zCoord] != 0) {
+                world[xCoord][i + 1][zCoord] = 5;
+                break;
+            }
+        }
     } else if (direction < 0) {
-        world[10][25][12] = 21;
+        for (int i = WORLDY-1; i > 0; i--) {
+            if (world[xCoord][i][zCoord] != 0) {
+                world[xCoord][i + 1][zCoord] = 21;
+                break;
+            }
+        }
     } else {
-        world[12][25][10] = 5;
-        world[10][25][12] = 21;
+        for (int i = WORLDY-1; i > 0; i--) {
+            if (world[xCoord][i][zCoord] != 0) {
+                world[xCoord][i + 1][zCoord] = 5;
+                break;
+            }
+        }
+        for (int i = WORLDY-1; i > 0; i--) {
+            if (world[xCoord][i][zCoord - 3] != 0) {
+                world[xCoord][i + 1][zCoord - 3] = 21;
+            }
+        }
     }
+    // places user spawn near teleport cubes
+    for (int i = WORLDY-1; i > 0; i--) {
+        if (world[xCoord-3][i][zCoord] != 0) {
+            setViewPosition(-(xCoord-3), -(i + 1), -(zCoord));
+            break;
+        }
+    }
+    setViewOrientation(0, 135, 0);
+    
     saveLevel(currentLevel);
 }
 
@@ -715,6 +775,15 @@ void setColors() {
     // Wall greens
     setUserColour(26, 0.0 / 255.0, 49.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 49.0 / 255.0, 0.0 / 255.0, 1.0);
     setUserColour(27, 0.0 / 255.0, 70.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 70.0 / 255.0, 0.0 / 255.0, 1.0);
+
+    // grass greens
+    setUserColour(28, 0.0 / 255.0, 49.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 49.0 / 255.0, 0.0 / 255.0, 1.0);
+    setUserColour(29, 0.0 / 255.0, 44.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 44.0 / 255.0, 0.0 / 255.0, 1.0);
+
+    // snow whites
+    setUserColour(30, 230.0 / 255.0, 230.0 / 255.0, 230.0 / 255.0, 1.0, 230.0 / 255.0, 230.0 / 255.0, 230.0 / 255.0, 1.0);
+    setUserColour(31, 180.0 / 255.0, 180.0 / 255.0, 180.0 / 255.0, 1.0, 150.0 / 255.0, 150.0 / 255.0, 150.0 / 255.0, 1.0);
+
 }
 
 /*
@@ -806,6 +875,9 @@ void handleCollision() {
         if (world[(int)floor(xx - ((-newx + xx) * 2))][(int)floor(yy)][(int)floor(zz - ((-newz + zz) * 2))] != 0 && world[(int)floor(xx - ((-newx + xx) * 2))][(int)floor(yy + 1)][(int)floor(zz - ((-newz + zz) * 2))] == 0) {
             // move on top of single block
             setViewPosition(-(xx - ((-newx + xx) * 2)), -(yy + 1), -(zz - ((-newz + zz) * 2)));
+        } else if (newx < 0 || newx > WORLDX || newz < 0 || newz > WORLDZ) {
+            setViewPosition(-xx, -yy, -zz);
+            break;
         } else if (world[(int)floor(xx - ((-newx + xx) * 2))][(int)floor(yy)][(int)floor(zz - ((-newz + zz) * 2))] != 0) {
             // prevent 'sticking' to walls
             // split 360 degrees into 8 octants and check each one

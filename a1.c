@@ -379,7 +379,7 @@ int i, j, k;
    currentLevel = initNewLevel(NULL,0);
 
    // creates first level
-   createDungeonLevel(currentLevel, 0);
+   createOutdoorLevel(currentLevel, 0);
 
    // start timer
    gettimeofday(&t1, NULL);

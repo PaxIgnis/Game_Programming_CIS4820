@@ -1,19 +1,27 @@
-*** BEGIN
+*** BEGIN ***
 
 Student: Hendrik van der Meijden
-Game Programming Assignment 1
+Game Programming Assignment 2
 
-9 rooms are randomly generated, with a minimum size of 3x3.
-Doorway locations are randomly selected, and most coridoors are not straight because of this.
+Player is initially placed in the 'outdoor' level, near to the teleportation portals.
+The outdoor level can be up to 24 cubes in height, with the lowest ones being brown, 
+the middle cubes being green and the highest peaks being white.
+
+If the player jumps on the grey teleportation cube they will be teleported to the dungeon level.
+They will be placed in one of the 9 rooms (randowm selection) near the white teleportation cube to
+go back up to the outdoor world.
+
+In the dungeon leve, 9 rooms are randomly generated, with a minimum size of 6x6.
+Doorways (represented by orange cubes) are randomly selected, and most coridoors are not straight because of this.
 It is possible that two coridoors intersect, which the Professor said was fine.
 
-The ceiling and the walls have the same ramdom pastel color theme.
-The coridoor floors are black and white, while the room floors are random bright colors.
+When a player moves between levels, all of the information is saved from the current level into a special struct in 
+a linked list (this allows for an infinite number of levels). If the level that the user is teleporting to has not been
+seen yet, it is generated, however if they are returning to a level they have already been on, all of the information is pulled
+from the data struct to recreate the level.
 
-The random blocks used for jumping are randomly placed in rooms, with a chance of 15% of being generated.
+The random blocks used for jumping are randomly placed in rooms (only in dungeon level), with a chance of 15% of being generated.
 These blocks slowly change colors.
-
-The Player is randomly placed in one of the rooms.
 
 Gravity and collision detection have been implemented, there is no clipping with the collision detection.
 When a player collides with a wall, they will slide along it instead of stopping.
@@ -22,8 +30,22 @@ Flying has been disabled, as per the spec.
 
 Program was tested on a Windows 10 WSL configuration.
 
+Perlin noise code was copied from https://gist.github.com/nowl/828013
+Professor gave permission to use code for the perlin noise from Wikipedia or other sources.
 
-*** END
+The makefile was updated to include 2 new .c (and .h) files: helper.c and perlin.calculations
+Most of functions have been moved to the helper.c file.
+
+
+*** END ***
+
+
+
+
+
+
+
+
 
 Building and Running the Graphics System
 ----------------------------------------
