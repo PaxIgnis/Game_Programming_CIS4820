@@ -7,11 +7,11 @@ Player is initially placed in the 'outdoor' level, near to the teleportation por
 The outdoor level can be up to 24 cubes in height, with the lowest ones being brown, 
 the middle cubes being green and the highest peaks being white.
 
-If the player jumps on the grey teleportation cube they will be teleported to the dungeon level.
-They will be placed in one of the 9 rooms (randowm selection) near the white teleportation cube to
-go back up to the outdoor world.
+A grey cube is placed near the spawn location. If the player jumps on the grey teleportation cube 
+they will be teleported to the dungeon level. They will be placed in one of the 9 rooms (randowm selection) 
+near the white teleportation cube to go back up to the outdoor world.
 
-In the dungeon leve, 9 rooms are randomly generated, with a minimum size of 6x6.
+In the dungeon level, 9 rooms are randomly generated, with a minimum size of 6x6.
 Doorways (represented by orange cubes) are randomly selected, and most coridoors are not straight because of this.
 It is possible that two coridoors intersect, which the Professor said was fine.
 
@@ -33,8 +33,8 @@ Program was tested on a Windows 10 WSL configuration.
 Perlin noise code was copied from https://gist.github.com/nowl/828013
 Professor gave permission to use code for the perlin noise from Wikipedia or other sources.
 
-The makefile was updated to include 2 new .c (and .h) files: helper.c and perlin.calculations
-Most of functions have been moved to the helper.c file.
+The makefile was updated to include 2 new .c (and .h) files: helper.c and perlin.c
+Most of the new functions have been moved to the helper.c file.
 
 
 *** END ***

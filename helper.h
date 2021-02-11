@@ -5,8 +5,8 @@
  */
 typedef struct level {
     int worldLegend[WORLDX][WORLDY][WORLDZ][2];
-    struct level *up;
-    struct level *down;
+    struct level* up;
+    struct level* down;
     int lastLocation[3];
     int lastOrientation[3];
     int worldType;
