@@ -291,13 +291,13 @@ void update() {
       elapsedTime3 += (t2.tv_usec - t4.tv_usec) / 1000.0; // us to ms
 
       // change color of random blocks
-      if (elapsedTime2 > 600.0) {
-         r = ((rand() % (255 + 1 - 1)) + 1) / 255.0;
-         g = ((rand() % (255 + 1 - 1)) + 1) / 255.0;
-         b = ((rand() % (255 + 1 - 1)) + 1) / 255.0;
-         setUserColour(10, r, g, b, 1.0, r, g, b, 1.0);
-         gettimeofday(&t3, NULL);
-      }
+      // if (elapsedTime2 > 600.0) {
+      //    r = ((rand() % (255 + 1 - 1)) + 1) / 255.0;
+      //    g = ((rand() % (255 + 1 - 1)) + 1) / 255.0;
+      //    b = ((rand() % (255 + 1 - 1)) + 1) / 255.0;
+      //    setUserColour(10, r, g, b, 1.0, r, g, b, 1.0);
+      //    gettimeofday(&t3, NULL);
+      // }
 
       // add gravity
       if (elapsedTime > 20.0) {
@@ -323,6 +323,7 @@ void update() {
 
       if (currentLevel->worldType == OUTDOOR) {
          animateClouds();
+         animateLava();
       }
    }
 }

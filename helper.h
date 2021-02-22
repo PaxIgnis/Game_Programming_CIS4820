@@ -21,6 +21,9 @@ typedef struct level {
 #define DUNGEON 5
 #define OUTDOOR 6
 
+// offsets lava texture to show movement
+void animateLava();
+
 // moves clouds across sky
 void animateClouds();
 

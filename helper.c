@@ -1,11 +1,11 @@
 
 /*
- * Owner: Hendrik van der Meijden 
+ * Owner: Hendrik van der Meijden
  * Date: Feb 2021
- * 
+ *
  * Defines functions used for CIS4820 W21
- * 
- */ 
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,8 +25,42 @@ extern void setViewOrientation(float, float, float);
 extern void getViewOrientation(float*, float*, float*);
 extern int setUserColour(int, GLfloat, GLfloat, GLfloat, GLfloat, GLfloat,
     GLfloat, GLfloat, GLfloat);
+/* texture functions */
+extern int setAssignedTexture(int, int);
+extern void unsetAssignedTexture(int);
+extern int getAssignedTexture(int);
+extern void setTextureOffset(int, float, float);
 
 
+/*
+ * Function: animateLava
+ * -------------------
+ *
+ * Called to move lava texture by an offset
+ *
+ */
+void animateLava() {
+    static struct timeval t, t1;
+    static float textureOffset = 0.0;
+    static int initialized;
+
+    if (initialized == 0) {
+        initialized = 1;
+        gettimeofday(&t, NULL);
+    }
+    gettimeofday(&t1, NULL);
+
+    double elapsedTime = (t1.tv_sec - t.tv_sec) * 1000.0; // sec to ms
+    elapsedTime += (t1.tv_usec - t.tv_usec) / 1000.0; // us to ms
+
+    // update clouds every 50 ms
+    if (elapsedTime > 50) {
+        textureOffset -= 0.01;
+        setTextureOffset(48, 0.0, textureOffset);
+        setTextureOffset(49, 0.0, textureOffset);
+        gettimeofday(&t, NULL);
+    }
+}
 
 /*
  * Function: animateClouds
@@ -50,7 +84,7 @@ void animateClouds() {
     elapsedTime += (t1.tv_usec - t.tv_usec) / 1000.0; // us to ms
 
     // update clouds every 150 ms
-    if (elapsedTime > 150) {  
+    if (elapsedTime > 150) {
         for (int x = 0; x < WORLDX; x++) {
             for (int z = 0; z < WORLDZ; z++) {
                 float height = perlin2d(x + i, z, 0.1, 1);
@@ -135,31 +169,31 @@ void createOutdoorLevel(level* currentLevel, int direction) {
             // create a checkerboard pattern
             if (((adjustedHeight % 2 == 0) && ((i + j) % 2 != 0)) || ((adjustedHeight % 2 != 0) && ((i + j) % 2 == 0))) {
                 if (adjustedHeight <= 24) {
-                    world[i][adjustedHeight][j] = 22;
-                    world[i][adjustedHeight - 1][j] = 22;
-                    world[i][adjustedHeight - 2][j] = 22;
+                    world[i][adjustedHeight][j] = 49;
+                    world[i][adjustedHeight - 1][j] = 49;
+                    world[i][adjustedHeight - 2][j] = 49;
                 } else if (adjustedHeight > 30) {
-                    world[i][adjustedHeight][j] = 30;
-                    world[i][adjustedHeight - 1][j] = 30;
-                    world[i][adjustedHeight - 2][j] = 30;
+                    world[i][adjustedHeight][j] = 51;
+                    world[i][adjustedHeight - 1][j] = 51;
+                    world[i][adjustedHeight - 2][j] = 51;
                 } else {
-                    world[i][adjustedHeight][j] = 28;
-                    world[i][adjustedHeight - 1][j] = 28;
-                    world[i][adjustedHeight - 2][j] = 28;
+                    world[i][adjustedHeight][j] = 42;
+                    world[i][adjustedHeight - 1][j] = 42;
+                    world[i][adjustedHeight - 2][j] = 42;
                 }
             } else {
                 if (adjustedHeight <= 24) {
-                    world[i][adjustedHeight][j] = 23;
-                    world[i][adjustedHeight - 1][j] = 23;
-                    world[i][adjustedHeight - 2][j] = 23;
+                    world[i][adjustedHeight][j] = 48;
+                    world[i][adjustedHeight - 1][j] = 48;
+                    world[i][adjustedHeight - 2][j] = 48;
                 } else if (adjustedHeight > 30) {
-                    world[i][adjustedHeight][j] = 31;
-                    world[i][adjustedHeight - 1][j] = 31;
-                    world[i][adjustedHeight - 2][j] = 31;
+                    world[i][adjustedHeight][j] = 52;
+                    world[i][adjustedHeight - 1][j] = 52;
+                    world[i][adjustedHeight - 2][j] = 52;
                 } else {
-                    world[i][adjustedHeight][j] = 29;
-                    world[i][adjustedHeight - 1][j] = 29;
-                    world[i][adjustedHeight - 2][j] = 29;
+                    world[i][adjustedHeight][j] = 50;
+                    world[i][adjustedHeight - 1][j] = 50;
+                    world[i][adjustedHeight - 2][j] = 50;
                 }
             }
         }
@@ -329,7 +363,7 @@ void setUserValues(int var[3], double a, double b, double c) {
  *            if it is negative, the new level is down
  *
  * return: pointer to struct for new level
- * 
+ *
  */
 level* initNewLevel(level* currentPos, int direction) {
     level* l = (level*)malloc(sizeof(level));
@@ -703,9 +737,9 @@ void createDungeonLevel(level* currentLevel, int direction) {
             if (worldLegend[i][0][j] == CORRIDORWALL || worldLegend[i][0][j] == WALL) {
                 for (k = 0; k < 5; k++) {
                     if (((k % 2 == 0) && ((i + j) % 2 != 0)) || ((k % 2 != 0) && ((i + j) % 2 == 0))) {
-                        world[i][25 + k][j] = 26;
+                        world[i][25 + k][j] = 44;
                     } else {
-                        world[i][25 + k][j] = 27;
+                        world[i][25 + k][j] = 45;
                     }
                 }
             }
@@ -713,9 +747,9 @@ void createDungeonLevel(level* currentLevel, int direction) {
             if (worldLegend[i][0][j] == DOORWAYPOST) {
                 for (k = 0; k < 5; k++) {
                     if (k % 2 == 0) {
-                        world[i][25 + k][j] = 24;
+                        world[i][25 + k][j] = 46;
                     } else {
-                        world[i][25 + k][j] = 25;
+                        world[i][25 + k][j] = 46;
                     }
                 }
             }
@@ -723,14 +757,14 @@ void createDungeonLevel(level* currentLevel, int direction) {
             if (worldLegend[i][0][j] == FLOOR || worldLegend[i][0][j] == CORRIDORFLOOR) {
                 // sets random blocks
                 if (((rand() % (65 + 1 - 1)) + 1) == 1 && worldLegend[i][0][j] == FLOOR) {
-                    world[i][26][j] = 10;
+                    world[i][26][j] = 47;
                 }
                 if ((j % 2 == 0 && !(i % 2 == 0) || (!(j % 2 == 0) && (i % 2 == 0)))) {
-                    world[i][25][j] = 22;
-                    world[i][29][j] = 22;
+                    world[i][25][j] = 40;
+                    world[i][29][j] = 42;
                 } else {
-                    world[i][25][j] = 23;
-                    world[i][29][j] = 23;
+                    world[i][25][j] = 41;
+                    world[i][29][j] = 43;
                 }
             }
             currentLevel->worldLegend[i][0][j][0] = worldLegend[i][0][j];
@@ -747,7 +781,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
     // clears cubes from around player spawn
     for (i = startingPoints[room][0]; i < startingPoints[room][0] + 6; i++) {
         for (j = startingPoints[room][1]; j < startingPoints[room][1] + 6; j++) {
-            if (world[i][26][j] == 10) {
+            if (world[i][26][j] == 47) {
                 world[i][26][j] == 0;
             }
         }
@@ -834,6 +868,51 @@ void setColors() {
     // snow whites
     setUserColour(30, 230.0 / 255.0, 230.0 / 255.0, 230.0 / 255.0, 1.0, 230.0 / 255.0, 230.0 / 255.0, 230.0 / 255.0, 1.0);
     setUserColour(31, 180.0 / 255.0, 180.0 / 255.0, 180.0 / 255.0, 1.0, 150.0 / 255.0, 150.0 / 255.0, 150.0 / 255.0, 1.0);
+
+    // set textures
+
+    // floors
+    setUserColour(40, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(40, 37);
+    setUserColour(41, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(41, 30);
+
+    // ceiling
+    setUserColour(42, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(42, 42);
+    setUserColour(43, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(43, 30);
+
+    // walls
+    setUserColour(44, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(44, 2);
+    setUserColour(45, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(45, 7);
+
+    // doorways
+    setUserColour(46, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(46, 3);
+
+    // random blocks
+    setUserColour(47, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(47, 22);
+
+    // lava
+    setUserColour(49, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(49, 24);
+    setUserColour(48, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(48, 52);
+
+    // flower
+    setUserColour(50, 0.8, 0.8, 0.8, 1.0, 0.8, 0.8, 0.8, 1.0);
+    setAssignedTexture(50, 25);
+
+    // snow
+    setUserColour(51, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(51, 38);
+    setUserColour(52, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    setAssignedTexture(52, 5);
+
 }
 
 
