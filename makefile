@@ -48,8 +48,9 @@
 # on your distribution.
 LIBS = -lGL -lGLU -lglut -lm -D__LINUX__
 
-a1: a1.c graphics.c visible.c graphics.h helper.h perlin.h
-	gcc a1.c graphics.c visible.c helper.c perlin.c -o a1 $(LIBS)
+
+a1: a1.c graphics.c visible.c graphics.h helper.h perlin.h mesh.c mesh.h fast_obj.h
+	gcc a1.c graphics.c visible.c helper.c perlin.c mesh.c -o a1 $(LIBS)
 
 clean:
 	rm a1

@@ -62,6 +62,12 @@ extern void  draw2Dbox(int, int, int, int);
 extern void  draw2Dtriangle(int, int, int, int, int, int);
 extern void  set2Dcolour(float[]);
 
+/* texture functions */
+extern int setAssignedTexture(int, int);
+extern void unsetAssignedTexture(int);
+extern int getAssignedTexture(int);
+extern void setTextureOffset(int, float, float);
+
 
 /* flag which is set to 1 when flying behaviour is desired */
 extern int flycontrol;
@@ -96,6 +102,14 @@ void unsetUserColour(int);
 extern void getUserColour(int, GLfloat*, GLfloat*, GLfloat*, GLfloat*,
    GLfloat*, GLfloat*, GLfloat*, GLfloat*);
 
+/* mesh creation, translatio, rotation functions */
+extern void setMeshID(int, int, float, float, float);
+extern void unsetMeshID(int);
+extern void setTranslateMesh(int, float, float, float);
+extern void setRotateMesh(int, float, float, float);
+extern void setScaleMesh(int, float);
+extern void drawMesh(int);
+extern void hideMesh(int);
 /********* end of extern variable declarations **************/
 // variables to keep track of time
 struct timeval t1, t2, t3, t4;
@@ -163,15 +177,6 @@ void update() {
       /* update old position so it contains the correct value */
       /* -otherwise view position is only correct after a key is */
       /*  pressed and keyboard() executes. */
-#if 0
-// Fire a ray in the direction of forward motion
-      float xx, yy, zz;
-      getViewPosition(&x, &y, &z);
-      getOldViewPosition(&xx, &yy, &zz);
-      printf("%f %f %f %f %f %f\n", xx, yy, zz, x, y, z);
-      printf("%f %f %f\n", -xx + ((x - xx) * 25.0), -yy + ((y - yy) * 25.0), -zz + ((z - zz) * 25.0));
-      createTube(2, -xx, -yy, -zz, -xx - ((x - xx) * 25.0), -yy - ((y - yy) * 25.0), -zz - ((z - zz) * 25.0), 5);
-#endif
 
       getViewPosition(&x, &y, &z);
       setOldViewPosition(x, y, z);
@@ -188,6 +193,14 @@ void update() {
       /* counter for user defined colour changes */
       static int colourCount = 0;
       static GLfloat offset = 0.0;
+
+      /* offset counter for animated texture */
+      static float textureOffset = 0.0;
+
+      /* scaling values for fish mesh */
+      static float fishScale = 1.0;
+      static int scaleCount = 0;
+      static GLfloat scaleOffset = 0.0;
 
       /* move mob 0 and rotate */
       /* set mob 0 position */
@@ -236,10 +249,32 @@ void update() {
       /* draws a purple tube above the other sample objects */
       createTube(1, 45.0, 30.0, 45.0, 50.0, 30.0, 50.0, 6);
 
+      /* move texture for lava effect */
+      textureOffset -= 0.01;
+      setTextureOffset(18, 0.0, textureOffset);
+
+      /* make fish grow and shrink (scaling) */
+      if (scaleCount == 1) scaleOffset += 0.01;
+      else scaleOffset -= 0.01;
+      if (scaleOffset >= 0.5) scaleCount = 0;
+      if (scaleOffset <= 0.0) scaleCount = 1;
+      setScaleMesh(1, 0.5 + scaleOffset);
+
+      /* make cow with id == 2 appear and disappear */
+      /* use scaleCount as switch to flip draw/hide */
+      /* rotate cow while it is visible */
+      if (scaleCount == 0) {
+         drawMesh(2);
+         setRotateMesh(2, 0.0, 180.0 + scaleOffset * 100.0, 0.0);
+      } else {
+         hideMesh(2);
+      }
+
       /* end testworld animation */
 
 
    } else {
+
       /* your code goes here */
       float x, y, z, yy;
       double r, g, b;
@@ -263,7 +298,7 @@ void update() {
          setUserColour(10, r, g, b, 1.0, r, g, b, 1.0);
          gettimeofday(&t3, NULL);
       }
-      
+
       // add gravity
       if (elapsedTime > 20.0) {
          getViewPosition(&x, &y, &z);
@@ -372,6 +407,93 @@ int main(int argc, char** argv) {
 
       /* create sample player */
       createPlayer(0, 52.0, 27.0, 52.0, 0.0);
+
+      /* texture examples */
+
+      /* create textured cube */
+      /* create user defined colour with an id number of 11 */
+      setUserColour(11, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+      /* attach texture 22 to colour id 11 */
+      setAssignedTexture(11, 22);
+      /* place a cube in the world using colour id 11 which is texture 22 */
+      world[59][25][50] = 11;
+
+      /* create textured cube */
+      setUserColour(12, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+      setAssignedTexture(12, 27);
+      world[61][25][50] = 12;
+
+      /* create textured cube */
+      setUserColour(10, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+      setAssignedTexture(10, 26);
+      world[63][25][50] = 10;
+
+      /* create textured floor */
+      setUserColour(13, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+      setAssignedTexture(13, 8);
+      for (i = 57; i < 67; i++)
+         for (j = 45; j < 55; j++)
+            world[i][24][j] = 13;
+
+      /* create textured wall */
+      setUserColour(14, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+      setAssignedTexture(14, 18);
+      for (i = 57; i < 67; i++)
+         for (j = 0; j < 4; j++)
+            world[i][24 + j][45] = 14;
+
+      /* create textured wall */
+      setUserColour(15, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+      setAssignedTexture(15, 42);
+      for (i = 45; i < 55; i++)
+         for (j = 0; j < 4; j++)
+            world[57][24 + j][i] = 15;
+
+      // two cubes using the same texture but one is offset
+      // cube with offset texture 33
+      setUserColour(16, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+      setAssignedTexture(16, 33);
+      world[65][25][50] = 16;
+      setTextureOffset(16, 0.5, 0.5);
+      // cube with non-offset texture 33
+      setUserColour(17, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+      setAssignedTexture(17, 33);
+      world[66][25][50] = 17;
+
+      // create some lava textures that will be animated
+      setUserColour(18, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+      setAssignedTexture(18, 24);
+      world[62][24][55] = 18;
+      world[63][24][55] = 18;
+      world[64][24][55] = 18;
+      world[62][24][56] = 18;
+      world[63][24][56] = 18;
+      world[64][24][56] = 18;
+
+      // draw cow mesh and rotate 45 degrees around the y axis
+      // game id = 0, cow mesh id == 0
+      setMeshID(0, 0, 48.0, 26.0, 50.0);
+      setRotateMesh(0, 0.0, 45.0, 0.0);
+
+      // draw fish mesh and scale to half size (0.5)
+      // game id = 1, fish mesh id == 1
+      setMeshID(1, 1, 51.0, 28.0, 50.0);
+      setScaleMesh(1, 0.5);
+
+      // draw cow mesh and rotate 45 degrees around the y axis
+      // game id = 2, cow mesh id == 0
+      setMeshID(2, 0, 59.0, 26.0, 47.0);
+
+      // draw bat
+      // game id = 3, bat mesh id == 2
+      setMeshID(3, 2, 61.0, 26.0, 47.0);
+      setScaleMesh(3, 0.5);
+      // draw cactus
+      // game id = 4, cactus mesh id == 3
+      setMeshID(4, 3, 63.0, 26.0, 47.0);
+      setScaleMesh(4, 0.5);
+
+
    } else {
 
       /* your code to build the world goes here */
