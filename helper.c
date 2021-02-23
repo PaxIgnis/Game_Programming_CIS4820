@@ -30,6 +30,14 @@ extern int setAssignedTexture(int, int);
 extern void unsetAssignedTexture(int);
 extern int getAssignedTexture(int);
 extern void setTextureOffset(int, float, float);
+/* mesh creation, translatio, rotation functions */
+extern void setMeshID(int, int, float, float, float);
+extern void unsetMeshID(int);
+extern void setTranslateMesh(int, float, float, float);
+extern void setRotateMesh(int, float, float, float);
+extern void setScaleMesh(int, float);
+extern void drawMesh(int);
+extern void hideMesh(int);
 
 
 /*
@@ -98,6 +106,110 @@ void animateClouds() {
         }
         gettimeofday(&t, NULL);
         i++;
+    }
+}
+
+
+/*
+ * Function: animateMesh
+ * -------------------
+ *
+ * Called to move Meshes around in their respective rooms
+ *
+ */
+void animateMesh(level *currentLevel) {
+    float x, y, z, xrot, yrot, zrot;
+    static struct timeval t, t1;
+    static int i;
+    double speed = .05;
+
+    static int initialized;
+    if (initialized == 0) {
+        initialized = 1;
+        gettimeofday(&t, NULL);
+    }
+    gettimeofday(&t1, NULL);
+
+    double elapsedTime = (t1.tv_sec - t.tv_sec) * 1000.0; // sec to ms
+    elapsedTime += (t1.tv_usec - t.tv_usec) / 1000.0; // us to ms
+    // update meshes every 50 ms
+    if (elapsedTime > 50) {
+        if (elapsedTime > 90) {
+            speed = ((int)elapsedTime / 50) * .05;
+        } else {
+            speed = .05;
+        }
+        for (int i = 0; i < 9; i++) {
+            int meshType = getMeshNumber(i);
+            getMeshLocation(i, &x, &y, &z);
+            getMeshOrientation(i, &xrot, &yrot, &zrot);
+            // cow (0) faces right and all else left on 0 degrees y rot
+            if (meshType == 0) {
+                yrot = yrot + 270;
+            } else {
+                yrot = yrot + 90;
+            }
+            if ((int)yrot >= 360) {
+                yrot = yrot - 360;
+            } else if ((int)yrot < 0) {
+                yrot = yrot + 360;
+            }
+            // moving in left direction
+            if ((int)yrot == 0) {
+                if ((int)floor(x) > currentLevel->startingPoints[i][0] + 2 && world[(int)floor(x)][26][(int)floor(z)] == 0 && 
+                    world[(int)floor(x) - 1][26][(int)floor(z)] == 0 && world[(int)floor(x)][26][(int)floor(z) - 1] == 0 && 
+                    world[(int)floor(x) - 1][26][(int)floor(z) - 1] == 0 && world[(int)floor(x)][26][(int)floor(z) + 1] == 0 && 
+                    world[(int)floor(x) - 1][26][(int)floor(z) + 1] == 0) {
+                    x = x - speed;
+                } else {
+                    int direction = rand() % 3;
+                    yrot = direction == 1 ? 90 : (direction == 2 ? 180 : 270);
+                }
+            } else if ((int)yrot == 90) { // moving up direction
+                if ((int)floor(z) < (currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] - 2) && world[(int)floor(x)][26][(int)ceil(z)] == 0 && 
+                    world[(int)floor(x)][26][(int)ceil(z) + 1] == 0 && world[(int)floor(x) - 1][26][(int)ceil(z)] == 0 && 
+                    world[(int)floor(x) - 1][26][(int)ceil(z) + 1] == 0 && world[(int)floor(x) + 1][26][(int)ceil(z)] == 0 && 
+                    world[(int)floor(x) + 1][26][(int)ceil(z) + 1] == 0) {
+                    z = z + speed;
+                } else {
+                    int direction = rand() % 3;
+                    yrot = direction == 1 ? 0 : (direction == 2 ? 180 : 270);
+                }
+            } else if ((int)yrot == 180) { // moving right direction
+                if ((int)ceil(x) < (currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] - 2) && world[(int)ceil(x)][(int)floor(26)][(int)floor(z)] == 0 &&
+                    world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z)] == 0 && world[(int)ceil(x)][(int)floor(26)][(int)floor(z) + 1] == 0 &&
+                    world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z) + 1] == 0 && world[(int)ceil(x)][(int)floor(26)][(int)floor(z) - 1] == 0 &&
+                    world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z) - 1] == 0) {
+                    x = x + speed;
+                } else {
+                    int direction = rand() % 3;
+                    yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 270);
+                }
+            } else if ((int)yrot == 270) { // moving down direction
+                if ((int)floor(z) > (currentLevel->startingPoints[i][1] + 2) && world[(int)floor(x)][26][(int)floor(z)] == 0 && 
+                    world[(int)floor(x)][26][(int)floor(z) - 1 ] == 0 && world[(int)floor(x) + 1][26][(int)floor(z)] == 0 && 
+                    world[(int)floor(x) + 1][26][(int)floor(z) - 1 ] == 0 && world[(int)floor(x) - 1][26][(int)floor(z)] == 0 && 
+                    world[(int)floor(x) - 1][26][(int)floor(z) - 1 ] == 0) {
+                    z = z - speed;
+                } else {
+                    int direction = rand() % 3;
+                    yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 180);
+                }
+            }
+            if (meshType == 0) {
+                yrot = yrot - 270;
+            } else {
+                yrot = yrot - 90;
+            }
+            if ((int)yrot >= 360) {
+                yrot = yrot - 360;
+            } else if ((int)yrot < 0) {
+                yrot = yrot + 360;
+            }
+            setTranslateMesh(i, x, y, z);
+            setRotateMesh(i, xrot, yrot, zrot);
+        }
+        gettimeofday(&t, NULL);
     }
 }
 
@@ -796,6 +908,30 @@ void createDungeonLevel(level* currentLevel, int direction) {
         world[startingPoints[room][0] + 4][26][startingPoints[room][1] + 2] = 5;
         world[startingPoints[room][0] + 2][26][startingPoints[room][1] + 4] = 21;
     }
+    
+    // create and places Meshes
+
+    // loop through 9 rooms
+    for (int i = 0; i < 9; i++) {
+        // select random starting location in room
+        int x = (rand() % (roomSizes[i][0] + startingPoints[i][0] - 2 - (startingPoints[i][0] + 2) + 1)) + startingPoints[i][0] + 2;
+        float y = 26.5;
+        int z = (rand() % (roomSizes[i][1] + startingPoints[i][1] - 2 - (startingPoints[i][1] + 2) + 1)) + startingPoints[i][1] + 2;
+
+        // pick random mesh
+        int type = (rand() % 4);
+        //draw mesh
+        // mesh id matches which room they are placed in (i.e. mesh 1 is in room 1)
+        setMeshID(i, type, x, type >= 2 ? 26 : y, z);
+        setRotateMesh(i, 0.0, 0, 0.0);
+        setScaleMesh(i, 0.5);
+
+        // room data to struct
+        currentLevel->roomSizes[i][0] = roomSizes[i][0];
+        currentLevel->roomSizes[i][1] = roomSizes[i][1];
+        currentLevel->startingPoints[i][0] = startingPoints[i][0];
+        currentLevel->startingPoints[i][1] = startingPoints[i][1];
+    }
 
     // updates world array actual vals
     for (int i = 0; i < WORLDX; i++) {
@@ -811,6 +947,8 @@ void createDungeonLevel(level* currentLevel, int direction) {
     setUserValues(currentLevel->lastOrientation, 0, 135, 0);
 
     currentLevel->worldType = DUNGEON;
+
+    
 }
 
 
@@ -822,6 +960,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
  *
  */
 void setColors() {
+/*
     // changing colors
     setUserColour(10, 1.0, 0.60, 0.20, 1.0, 1.0, 0.60, 0.20, 1.0);
     // vanadyl blue
@@ -845,10 +984,10 @@ void setColors() {
     setUserColour(19, 25.0 / 255.0, 42.0 / 255.0, 86.0 / 255.0, 1.0, 25.0 / 255.0, 42.0 / 255.0, 86.0 / 255.0, 1.0);
     // electromagnetic
     setUserColour(20, 47.0 / 255.0, 54.0 / 255.0, 64.0 / 255.0, 1.0, 47.0 / 255.0, 54.0 / 255.0, 64.0 / 255.0, 1.0);
-
+*/
     // grey 
     setUserColour(21, 70.0 / 255.0, 70.0 / 255.0, 70.0 / 255.0, 1.0, 70.0 / 255.0, 70.0 / 255.0, 70.0 / 255.0, 1.0);
-
+/*
     // Floor browns
     setUserColour(22, 25.0 / 255.0, 25.0 / 255.0, 15.0 / 255.0, 1.0, 118.0 / 255.0, 74.0 / 255.0, 30.0 / 255.0, 1.0);
     setUserColour(23, 15.0 / 255.0, 10.0 / 255.0, 5.0 / 255.0, 1.0, 112.0 / 255.0, 56.0 / 255.0, 36.0 / 255.0, 1.0);
@@ -868,7 +1007,7 @@ void setColors() {
     // snow whites
     setUserColour(30, 230.0 / 255.0, 230.0 / 255.0, 230.0 / 255.0, 1.0, 230.0 / 255.0, 230.0 / 255.0, 230.0 / 255.0, 1.0);
     setUserColour(31, 180.0 / 255.0, 180.0 / 255.0, 180.0 / 255.0, 1.0, 150.0 / 255.0, 150.0 / 255.0, 150.0 / 255.0, 1.0);
-
+*/
     // set textures
 
     // floors

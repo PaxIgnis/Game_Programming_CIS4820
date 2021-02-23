@@ -1566,6 +1566,49 @@ void unsetMeshID(int id) {
    meshUsed[id] = 0;
 }
 
+/*
+ * Function: getMeshLocation
+ * -------------------
+ *
+ * Returns the current location of the specified mesh.
+ *
+ */
+void getMeshLocation(int id, float *xpos, float *ypos, float *zpos) {
+   *xpos = userMesh[id].xpos;
+   *ypos = userMesh[id].ypos;
+   *zpos = userMesh[id].zpos;
+}
+
+/*
+ * Function: getMeshOrientation
+ * -------------------
+ *
+ * Returns the current orientation over the 3
+ * axis of the specified mesh.
+ *
+ */
+void getMeshOrientation(int id, float *xaxis, float *yaxis, float *zaxis) {
+   *xaxis = userMesh[id].xrot;
+   *yaxis = userMesh[id].yrot;
+   *zaxis = userMesh[id].zrot;
+}
+
+/*
+ * Function: getMeshNumber
+ * -------------------
+ *
+ * Returns the the type of mesh.
+ *
+ */
+int getMeshNumber(int id) {
+   if (meshUsed[id] == 1) {
+      return userMesh[id].meshNumber;
+   } else {
+      return -1;
+   }
+   
+}
+
 void setTranslateMesh(int id, float xpos, float ypos, float zpos) {
    userMesh[id].xpos = xpos;
    userMesh[id].ypos = ypos;

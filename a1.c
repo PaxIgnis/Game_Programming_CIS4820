@@ -285,8 +285,8 @@ void update() {
       // calculate time passed since last run
       double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; // sec to ms
       elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
-      double elapsedTime2 = (t2.tv_sec - t3.tv_sec) * 1000.0; // sec to ms
-      elapsedTime2 += (t2.tv_usec - t3.tv_usec) / 1000.0; // us to ms
+      // double elapsedTime2 = (t2.tv_sec - t3.tv_sec) * 1000.0; // sec to ms
+      // elapsedTime2 += (t2.tv_usec - t3.tv_usec) / 1000.0; // us to ms
       double elapsedTime3 = (t2.tv_sec - t4.tv_sec) * 1000.0; // sec to ms
       elapsedTime3 += (t2.tv_usec - t4.tv_usec) / 1000.0; // us to ms
 
@@ -324,6 +324,8 @@ void update() {
       if (currentLevel->worldType == OUTDOOR) {
          animateClouds();
          animateLava();
+      } else {
+         animateMesh(currentLevel);
       }
    }
 }

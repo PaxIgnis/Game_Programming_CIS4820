@@ -10,6 +10,9 @@ typedef struct level {
     int lastLocation[3];
     int lastOrientation[3];
     int worldType;
+    //used for dungeon levels
+    int startingPoints[9][2]; // Room 0 is bottom left, room 1 is bottom middle...
+    int roomSizes[9][2]; // size includes outside wall
 } level;
 
 
@@ -21,38 +24,17 @@ typedef struct level {
 #define DUNGEON 5
 #define OUTDOOR 6
 
-// offsets lava texture to show movement
-void animateLava();
 
-// moves clouds across sky
 void animateClouds();
-
-// clears world values
+void animateLava();
+void animateMesh(level *currentLevel);
 void clearWorld();
-
-// creates dungeon level
 void createDungeonLevel(level* currentLevel, int direction);
-
-// creates outdoor level
 void createOutdoorLevel(level* currentLevel, int direction);
-
-// handles collisions
 void handleCollision();
-
-// handles collisions while falling
 void handleGravityCollision();
-
-// Creates data struct to store new level
 level* initNewLevel(level* currentPos, int direction);
-
-// saves level details to dat struct
 void saveLevel(level* currentLevel);
-
-// sets custom colors
 void setColors();
-
-// shortcut to update user arrays
 void setUserValues(int var[3], double a, double b, double c);
-
-// teleports player to new level
 level* teleport(level* currentLevel);

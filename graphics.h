@@ -34,3 +34,8 @@
 	/* maximum texture width and height */
 #define TEXTURESIZE 256
 
+
+void getMeshLocation(int id, float *xpos, float *ypos, float *zpos);
+int getMeshNumber(int id);
+void getMeshOrientation(int id, float *xaxis, float *yaxis, float *zaxis);
+
