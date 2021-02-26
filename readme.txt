@@ -1,18 +1,37 @@
 *** BEGIN ***
 
 Student: Hendrik van der Meijden
-Game Programming Assignment 2
+Game Programming Assignment 3
+
+----
+Assignment 3 Specific Notes
+----
+Textures have been used for all cubes except the teleportation (grey and white) cubes.
+
+One mesh is placed inside each room in the dungeon level. The type of mesh is randonly selected.
+Meshes randomly move around the room they are placed inside. They do not leave the room and they do not
+collide with any of the cubes inside of the room.
+Meshes are hidden when user leaves dungeon. They are only animated when user is 
+in the dungeon level and they are visible. Thus when they are not drawn, they are not moving.
+Visibility of the mesh is measured by the use of frustrum culling. The distance the mesh needs to
+be from the user is the size of the largest room in the dungeon. Thus the mesh has to be in the 
+view of the user, and close enough in order to be drawn and animated.
+
+----
+General Information
+----
 
 Player is initially placed in the 'outdoor' level, near to the teleportation portals.
-The outdoor level can be up to 24 cubes in height, with the lowest ones being brown, 
-the middle cubes being green and the highest peaks being white.
+The outdoor level can be up to 24 cubes in height, and is split into 3 levels, with
+each level getting a differne texture design.
 
 A grey cube is placed near the spawn location. If the player jumps on the grey teleportation cube 
-they will be teleported to the dungeon level. They will be placed in one of the 9 rooms (randowm selection) 
+they will be teleported to the dungeon level. (it will be created the first time the grey teleportation
+cube is used) They will be placed in one of the 9 rooms (randowm selection) 
 near the white teleportation cube to go back up to the outdoor world.
 
 In the dungeon level, 9 rooms are randomly generated, with a minimum size of 6x6.
-Doorways (represented by orange cubes) are randomly selected, and most coridoors are not straight because of this.
+Doorways (represented by pinkish cubes) are randomly selected, and most coridoors are not straight because of this.
 It is possible that two coridoors intersect, which the Professor said was fine.
 
 When a player moves between levels, all of the information is saved from the current level into a special struct in 
@@ -21,7 +40,7 @@ seen yet, it is generated, however if they are returning to a level they have al
 from the data struct to recreate the level.
 
 The random blocks used for jumping are randomly placed in rooms (only in dungeon level), with a chance of 15% of being generated.
-These blocks slowly change colors.
+These blocks have a wooden crate texture.
 
 Gravity and collision detection have been implemented, there is no clipping with the collision detection.
 When a player collides with a wall, they will slide along it instead of stopping.

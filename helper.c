@@ -38,6 +38,9 @@ extern void setRotateMesh(int, float, float, float);
 extern void setScaleMesh(int, float);
 extern void drawMesh(int);
 extern void hideMesh(int);
+extern int screenWidth;
+extern int screenHeight;
+extern int skySize;
 
 
 /*
@@ -117,7 +120,7 @@ void animateClouds() {
  * Called to move Meshes around in their respective rooms
  *
  */
-void animateMesh(level *currentLevel) {
+void animateMesh(level* currentLevel) {
     float x, y, z, xrot, yrot, zrot;
     static struct timeval t, t1;
     static int i;
@@ -141,73 +144,87 @@ void animateMesh(level *currentLevel) {
         }
         for (int i = 0; i < 9; i++) {
             int meshType = getMeshNumber(i);
-            getMeshLocation(i, &x, &y, &z);
-            getMeshOrientation(i, &xrot, &yrot, &zrot);
-            // cow (0) faces right and all else left on 0 degrees y rot
-            if (meshType == 0) {
-                yrot = yrot + 270;
-            } else {
-                yrot = yrot + 90;
-            }
-            if ((int)yrot >= 360) {
-                yrot = yrot - 360;
-            } else if ((int)yrot < 0) {
-                yrot = yrot + 360;
-            }
-            // moving in left direction
-            if ((int)yrot == 0) {
-                if ((int)floor(x) > currentLevel->startingPoints[i][0] + 2 && world[(int)floor(x)][26][(int)floor(z)] == 0 && 
-                    world[(int)floor(x) - 1][26][(int)floor(z)] == 0 && world[(int)floor(x)][26][(int)floor(z) - 1] == 0 && 
-                    world[(int)floor(x) - 1][26][(int)floor(z) - 1] == 0 && world[(int)floor(x)][26][(int)floor(z) + 1] == 0 && 
-                    world[(int)floor(x) - 1][26][(int)floor(z) + 1] == 0) {
-                    x = x - speed;
+            if (isMeshVisible(i) == 1) {
+                getMeshLocation(i, &x, &y, &z);
+                getMeshOrientation(i, &xrot, &yrot, &zrot);
+                // cow (0) faces right and all else left on 0 degrees y rot
+                if (meshType == 0) {
+                    yrot = yrot + 270;
                 } else {
-                    int direction = rand() % 3;
-                    yrot = direction == 1 ? 90 : (direction == 2 ? 180 : 270);
+                    yrot = yrot + 90;
                 }
-            } else if ((int)yrot == 90) { // moving up direction
-                if ((int)floor(z) < (currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] - 2) && world[(int)floor(x)][26][(int)ceil(z)] == 0 && 
-                    world[(int)floor(x)][26][(int)ceil(z) + 1] == 0 && world[(int)floor(x) - 1][26][(int)ceil(z)] == 0 && 
-                    world[(int)floor(x) - 1][26][(int)ceil(z) + 1] == 0 && world[(int)floor(x) + 1][26][(int)ceil(z)] == 0 && 
-                    world[(int)floor(x) + 1][26][(int)ceil(z) + 1] == 0) {
-                    z = z + speed;
+                if ((int)yrot >= 360) {
+                    yrot = yrot - 360;
+                } else if ((int)yrot < 0) {
+                    yrot = yrot + 360;
+                }
+                // moving in left direction
+                if ((int)yrot == 0) {
+                    if ((int)floor(x) > currentLevel->startingPoints[i][0] + 2 &&
+                        world[(int)floor(x)][26][(int)floor(z)] == 0 &&
+                        world[(int)floor(x) - 1][26][(int)floor(z)] == 0 &&
+                        world[(int)floor(x)][26][(int)floor(z) - 1] == 0 &&
+                        world[(int)floor(x) - 1][26][(int)floor(z) - 1] == 0 &&
+                        world[(int)floor(x)][26][(int)floor(z) + 1] == 0 &&
+                        world[(int)floor(x) - 1][26][(int)floor(z) + 1] == 0) {
+                        x = x - speed;
+                    } else {
+                        int direction = rand() % 3;
+                        yrot = direction == 1 ? 90 : (direction == 2 ? 180 : 270);
+                    }
+                } else if ((int)yrot == 90) { // moving up direction
+                    if ((int)floor(z) < (currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] - 2) &&
+                        world[(int)floor(x)][26][(int)ceil(z)] == 0 &&
+                        world[(int)floor(x)][26][(int)ceil(z) + 1] == 0 &&
+                        world[(int)floor(x) - 1][26][(int)ceil(z)] == 0 &&
+                        world[(int)floor(x) - 1][26][(int)ceil(z) + 1] == 0 &&
+                        world[(int)floor(x) + 1][26][(int)ceil(z)] == 0 &&
+                        world[(int)floor(x) + 1][26][(int)ceil(z) + 1] == 0) {
+                        z = z + speed;
+                    } else {
+                        int direction = rand() % 3;
+                        yrot = direction == 1 ? 0 : (direction == 2 ? 180 : 270);
+                    }
+                } else if ((int)yrot == 180) { // moving right direction
+                    if ((int)ceil(x) < (currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] - 2) &&
+                        world[(int)ceil(x)][(int)floor(26)][(int)floor(z)] == 0 &&
+                        world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z)] == 0 &&
+                        world[(int)ceil(x)][(int)floor(26)][(int)floor(z) + 1] == 0 &&
+                        world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z) + 1] == 0 &&
+                        world[(int)ceil(x)][(int)floor(26)][(int)floor(z) - 1] == 0 &&
+                        world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z) - 1] == 0) {
+                        x = x + speed;
+                    } else {
+                        int direction = rand() % 3;
+                        yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 270);
+                    }
+                } else if ((int)yrot == 270) { // moving down direction
+                    if ((int)floor(z) > (currentLevel->startingPoints[i][1] + 2) &&
+                        world[(int)floor(x)][26][(int)floor(z)] == 0 &&
+                        world[(int)floor(x)][26][(int)floor(z) - 1] == 0 &&
+                        world[(int)floor(x) + 1][26][(int)floor(z)] == 0 &&
+                        world[(int)floor(x) + 1][26][(int)floor(z) - 1] == 0 &&
+                        world[(int)floor(x) - 1][26][(int)floor(z)] == 0 &&
+                        world[(int)floor(x) - 1][26][(int)floor(z) - 1] == 0) {
+                        z = z - speed;
+                    } else {
+                        int direction = rand() % 3;
+                        yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 180);
+                    }
+                }
+                if (meshType == 0) {
+                    yrot = yrot - 270;
                 } else {
-                    int direction = rand() % 3;
-                    yrot = direction == 1 ? 0 : (direction == 2 ? 180 : 270);
+                    yrot = yrot - 90;
                 }
-            } else if ((int)yrot == 180) { // moving right direction
-                if ((int)ceil(x) < (currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] - 2) && world[(int)ceil(x)][(int)floor(26)][(int)floor(z)] == 0 &&
-                    world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z)] == 0 && world[(int)ceil(x)][(int)floor(26)][(int)floor(z) + 1] == 0 &&
-                    world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z) + 1] == 0 && world[(int)ceil(x)][(int)floor(26)][(int)floor(z) - 1] == 0 &&
-                    world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z) - 1] == 0) {
-                    x = x + speed;
-                } else {
-                    int direction = rand() % 3;
-                    yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 270);
+                if ((int)yrot >= 360) {
+                    yrot = yrot - 360;
+                } else if ((int)yrot < 0) {
+                    yrot = yrot + 360;
                 }
-            } else if ((int)yrot == 270) { // moving down direction
-                if ((int)floor(z) > (currentLevel->startingPoints[i][1] + 2) && world[(int)floor(x)][26][(int)floor(z)] == 0 && 
-                    world[(int)floor(x)][26][(int)floor(z) - 1 ] == 0 && world[(int)floor(x) + 1][26][(int)floor(z)] == 0 && 
-                    world[(int)floor(x) + 1][26][(int)floor(z) - 1 ] == 0 && world[(int)floor(x) - 1][26][(int)floor(z)] == 0 && 
-                    world[(int)floor(x) - 1][26][(int)floor(z) - 1 ] == 0) {
-                    z = z - speed;
-                } else {
-                    int direction = rand() % 3;
-                    yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 180);
-                }
+                setTranslateMesh(i, x, y, z);
+                setRotateMesh(i, xrot, yrot, zrot);
             }
-            if (meshType == 0) {
-                yrot = yrot - 270;
-            } else {
-                yrot = yrot - 90;
-            }
-            if ((int)yrot >= 360) {
-                yrot = yrot - 360;
-            } else if ((int)yrot < 0) {
-                yrot = yrot + 360;
-            }
-            setTranslateMesh(i, x, y, z);
-            setRotateMesh(i, xrot, yrot, zrot);
         }
         gettimeofday(&t, NULL);
     }
@@ -353,6 +370,77 @@ void createOutdoorLevel(level* currentLevel, int direction) {
     saveLevel(currentLevel);
 }
 
+/*
+ * Function: getDistanceBetween(float x1, float y1, float x2, float y2)
+ * -------------------
+ *
+ * Returns the distance between 2 points in 2d
+ *
+ */
+float getDistanceBetween(float x1, float y1, float x2, float y2) {
+    return sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)));
+}
+
+
+/*
+ * Function: meshVisibilityDetection
+ * -------------------
+ *
+ * Checks if mesh should be drawn or hidden by
+ * checking if is falls within the users view
+ *
+ *
+ */
+void meshVisibilityDetection() {
+    float x, y, z, curx, cury, curz, maxDist;
+
+    maxDist = 35;
+    void extractFrustum();
+    getViewPosition(&curx, &cury, &curz);
+
+    // loop through meshes
+    for (int i = 0; i < 9; i++) {
+        getMeshLocation(i, &x, &y, &z);
+        if (cubeInFrustum(x + 1, y, z, 1.5) && getDistanceBetween(x, z, -curx, -curz) < maxDist) {
+            if (isMeshVisible(i) == 0) {
+                switch (getMeshNumber(i)) {
+                case 0:
+                    printf("Cow mesh #%d is visible.\n", i + 1);
+                    break;
+                case 1:
+                    printf("Fish mesh #%d is visible.\n", i + 1);
+                    break;
+                case 2:
+                    printf("Bat mesh #%d is visible.\n", i + 1);
+                    break;
+                case 3:
+                    printf("Cactus mesh #%d is visible.\n", i + 1);
+                    break;
+                }
+                drawMesh(i);
+            }
+        } else {
+            if (isMeshVisible(i) == 1) {
+                switch (getMeshNumber(i)) {
+                case 0:
+                    printf("Cow mesh #%d is not visible.\n", i + 1);
+                    break;
+                case 1:
+                    printf("Fish mesh #%d is not visible.\n", i + 1);
+                    break;
+                case 2:
+                    printf("Bat mesh #%d is not visible.\n", i + 1);
+                    break;
+                case 3:
+                    printf("Cactus mesh #%d is not visible.\n", i + 1);
+                    break;
+                }
+                hideMesh(i);
+            }
+        }
+    }
+}
+
 
 /*
  * Function: currentLevel
@@ -431,6 +519,13 @@ void saveLevel(level* currentLevel) {
             for (int k = 0; k < WORLDZ; k++) {
                 currentLevel->worldLegend[i][j][k][1] = world[i][j][k];
             }
+        }
+    }
+
+    // turn off all meshes 
+    if (currentLevel->worldType == DUNGEON) {
+        for (int i = 0; i < 9; i++) {
+            hideMesh(i);
         }
     }
 
@@ -908,7 +1003,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
         world[startingPoints[room][0] + 4][26][startingPoints[room][1] + 2] = 5;
         world[startingPoints[room][0] + 2][26][startingPoints[room][1] + 4] = 21;
     }
-    
+
     // create and places Meshes
 
     // loop through 9 rooms
@@ -925,6 +1020,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
         setMeshID(i, type, x, type >= 2 ? 26 : y, z);
         setRotateMesh(i, 0.0, 0, 0.0);
         setScaleMesh(i, 0.5);
+        hideMesh(i);
 
         // room data to struct
         currentLevel->roomSizes[i][0] = roomSizes[i][0];
@@ -948,7 +1044,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
 
     currentLevel->worldType = DUNGEON;
 
-    
+
 }
 
 
@@ -960,54 +1056,9 @@ void createDungeonLevel(level* currentLevel, int direction) {
  *
  */
 void setColors() {
-/*
-    // changing colors
-    setUserColour(10, 1.0, 0.60, 0.20, 1.0, 1.0, 0.60, 0.20, 1.0);
-    // vanadyl blue
-    setUserColour(11, 0, 151.0 / 255.0, 230.0 / 255.0, 1.0, 0, 151.0 / 255.0, 230.0 / 255.0, 1.0);
-    // matt purple
-    setUserColour(12, 140.0 / 255.0, 122.0 / 255.0, 230.0 / 255.0, 1.0, 140.0 / 255.0, 122.0 / 255.0, 230.0 / 255.0, 1.0);
-    // nanohanacha gold
-    setUserColour(13, 225.0 / 255.0, 177.0 / 255.0, 44.0 / 255.0, 1.0, 225.0 / 255.0, 177.0 / 255.0, 44.0 / 255.0, 1.0);
-    //skirret green
-    setUserColour(14, 68.0 / 255.0, 189.0 / 255.0, 50.0 / 255.0, 1.0, 68.0 / 255.0, 189.0 / 255.0, 50.0 / 255.0, 1.0);
-    // naval
-    setUserColour(15, 64.0 / 255.0, 115.0 / 255.0, 158.0 / 255.0, 1.0, 64.0 / 255.0, 115.0 / 255.0, 158.0 / 255.0, 1.0);
-
-    // hd orange
-    setUserColour(16, 194.0 / 255.0, 54.0 / 255.0, 22.0 / 255.0, 1.0, 194.0 / 255.0, 54.0 / 255.0, 22.0 / 255.0, 1.0);
-    // hint of pensive
-    setUserColour(17, 220.0 / 255.0, 221.0 / 255.0, 22.0 / 255.0, 1.0, 220.0 / 255.0, 221.0 / 255.0, 22.0 / 255.0, 1.0);
-    // chain gang grey
-    setUserColour(18, 113.0 / 255.0, 128.0 / 255.0, 147.0 / 255.0, 1.0, 113.0 / 255.0, 128.0 / 255.0, 147.0 / 255.0, 1.0);
-    // pico void
-    setUserColour(19, 25.0 / 255.0, 42.0 / 255.0, 86.0 / 255.0, 1.0, 25.0 / 255.0, 42.0 / 255.0, 86.0 / 255.0, 1.0);
-    // electromagnetic
-    setUserColour(20, 47.0 / 255.0, 54.0 / 255.0, 64.0 / 255.0, 1.0, 47.0 / 255.0, 54.0 / 255.0, 64.0 / 255.0, 1.0);
-*/
     // grey 
     setUserColour(21, 70.0 / 255.0, 70.0 / 255.0, 70.0 / 255.0, 1.0, 70.0 / 255.0, 70.0 / 255.0, 70.0 / 255.0, 1.0);
-/*
-    // Floor browns
-    setUserColour(22, 25.0 / 255.0, 25.0 / 255.0, 15.0 / 255.0, 1.0, 118.0 / 255.0, 74.0 / 255.0, 30.0 / 255.0, 1.0);
-    setUserColour(23, 15.0 / 255.0, 10.0 / 255.0, 5.0 / 255.0, 1.0, 112.0 / 255.0, 56.0 / 255.0, 36.0 / 255.0, 1.0);
 
-    // doorway
-    setUserColour(24, 255.0 / 255.0, 140.0 / 255.0, 1.0 / 255.0, 1.0, 255.0 / 255.0, 140.0 / 255.0, 1.0 / 255.0, 1.0);
-    setUserColour(25, 250.0 / 255.0, 83.0 / 255.0, 0.0 / 255.0, 1.0, 250.0 / 255.0, 83.0 / 255.0, 0.0 / 255.0, 1.0);
-
-    // Wall greens
-    setUserColour(26, 0.0 / 255.0, 49.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 49.0 / 255.0, 0.0 / 255.0, 1.0);
-    setUserColour(27, 0.0 / 255.0, 70.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 70.0 / 255.0, 0.0 / 255.0, 1.0);
-
-    // grass greens
-    setUserColour(28, 0.0 / 255.0, 49.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 49.0 / 255.0, 0.0 / 255.0, 1.0);
-    setUserColour(29, 0.0 / 255.0, 44.0 / 255.0, 0.0 / 255.0, 1.0, 0.0 / 255.0, 44.0 / 255.0, 0.0 / 255.0, 1.0);
-
-    // snow whites
-    setUserColour(30, 230.0 / 255.0, 230.0 / 255.0, 230.0 / 255.0, 1.0, 230.0 / 255.0, 230.0 / 255.0, 230.0 / 255.0, 1.0);
-    setUserColour(31, 180.0 / 255.0, 180.0 / 255.0, 180.0 / 255.0, 1.0, 150.0 / 255.0, 150.0 / 255.0, 150.0 / 255.0, 1.0);
-*/
     // set textures
 
     // floors
@@ -1051,7 +1102,6 @@ void setColors() {
     setAssignedTexture(51, 38);
     setUserColour(52, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
     setAssignedTexture(52, 5);
-
 }
 
 
@@ -1385,4 +1435,164 @@ void handleCollision() {
             break;
         }
     }
+}
+
+
+
+float frustum[6][4];
+
+/*
+ * Function: cubeInFrustrum
+ * -------------------
+ *
+ * Calculates if a cubes falls inside the viewing frustrum
+ *
+ * Returns true if cube should be visible
+ *
+ * Source: http://www.crownandcutlass.com/features/technicaldetails/frustum.html
+ *
+ */
+bool cubeInFrustum(float x, float y, float z, float size) {
+    int p;
+
+    for (p = 0; p < 6; p++) {
+        if (frustum[p][0] * (x - size) + frustum[p][1] * (y - size) + frustum[p][2] * (z - size) + frustum[p][3] > 0)
+            continue;
+        if (frustum[p][0] * (x + size) + frustum[p][1] * (y - size) + frustum[p][2] * (z - size) + frustum[p][3] > 0)
+            continue;
+        if (frustum[p][0] * (x - size) + frustum[p][1] * (y + size) + frustum[p][2] * (z - size) + frustum[p][3] > 0)
+            continue;
+        if (frustum[p][0] * (x + size) + frustum[p][1] * (y + size) + frustum[p][2] * (z - size) + frustum[p][3] > 0)
+            continue;
+        if (frustum[p][0] * (x - size) + frustum[p][1] * (y - size) + frustum[p][2] * (z + size) + frustum[p][3] > 0)
+            continue;
+        if (frustum[p][0] * (x + size) + frustum[p][1] * (y - size) + frustum[p][2] * (z + size) + frustum[p][3] > 0)
+            continue;
+        if (frustum[p][0] * (x - size) + frustum[p][1] * (y + size) + frustum[p][2] * (z + size) + frustum[p][3] > 0)
+            continue;
+        if (frustum[p][0] * (x + size) + frustum[p][1] * (y + size) + frustum[p][2] * (z + size) + frustum[p][3] > 0)
+            continue;
+        return false;
+    }
+    return true;
+}
+
+/*
+ * Function: extractFrustrum
+ * -------------------
+ *
+ * Calculates the viewing frustum and tests if objects fall inside it
+ * Source: http://www.crownandcutlass.com/features/technicaldetails/frustum.html
+ *
+ */
+void extractFrustum() {
+    float   proj[16];
+    float   modl[16];
+    float   clip[16];
+    float   t;
+
+    /* Get the current PROJECTION matrix from OpenGL */
+    glGetFloatv(GL_PROJECTION_MATRIX, proj);
+
+    /* Get the current MODELVIEW matrix from OpenGL */
+    glGetFloatv(GL_MODELVIEW_MATRIX, modl);
+
+    /* Combine the two matrices (multiply projection by modelview) */
+    clip[0] = modl[0] * proj[0] + modl[1] * proj[4] + modl[2] * proj[8] + modl[3] * proj[12];
+    clip[1] = modl[0] * proj[1] + modl[1] * proj[5] + modl[2] * proj[9] + modl[3] * proj[13];
+    clip[2] = modl[0] * proj[2] + modl[1] * proj[6] + modl[2] * proj[10] + modl[3] * proj[14];
+    clip[3] = modl[0] * proj[3] + modl[1] * proj[7] + modl[2] * proj[11] + modl[3] * proj[15];
+
+    clip[4] = modl[4] * proj[0] + modl[5] * proj[4] + modl[6] * proj[8] + modl[7] * proj[12];
+    clip[5] = modl[4] * proj[1] + modl[5] * proj[5] + modl[6] * proj[9] + modl[7] * proj[13];
+    clip[6] = modl[4] * proj[2] + modl[5] * proj[6] + modl[6] * proj[10] + modl[7] * proj[14];
+    clip[7] = modl[4] * proj[3] + modl[5] * proj[7] + modl[6] * proj[11] + modl[7] * proj[15];
+
+    clip[8] = modl[8] * proj[0] + modl[9] * proj[4] + modl[10] * proj[8] + modl[11] * proj[12];
+    clip[9] = modl[8] * proj[1] + modl[9] * proj[5] + modl[10] * proj[9] + modl[11] * proj[13];
+    clip[10] = modl[8] * proj[2] + modl[9] * proj[6] + modl[10] * proj[10] + modl[11] * proj[14];
+    clip[11] = modl[8] * proj[3] + modl[9] * proj[7] + modl[10] * proj[11] + modl[11] * proj[15];
+
+    clip[12] = modl[12] * proj[0] + modl[13] * proj[4] + modl[14] * proj[8] + modl[15] * proj[12];
+    clip[13] = modl[12] * proj[1] + modl[13] * proj[5] + modl[14] * proj[9] + modl[15] * proj[13];
+    clip[14] = modl[12] * proj[2] + modl[13] * proj[6] + modl[14] * proj[10] + modl[15] * proj[14];
+    clip[15] = modl[12] * proj[3] + modl[13] * proj[7] + modl[14] * proj[11] + modl[15] * proj[15];
+
+    /* Extract the numbers for the RIGHT plane */
+    frustum[0][0] = clip[3] - clip[0];
+    frustum[0][1] = clip[7] - clip[4];
+    frustum[0][2] = clip[11] - clip[8];
+    frustum[0][3] = clip[15] - clip[12];
+
+    /* Normalize the result */
+    t = sqrt(frustum[0][0] * frustum[0][0] + frustum[0][1] * frustum[0][1] + frustum[0][2] * frustum[0][2]);
+    frustum[0][0] /= t;
+    frustum[0][1] /= t;
+    frustum[0][2] /= t;
+    frustum[0][3] /= t;
+
+    /* Extract the numbers for the LEFT plane */
+    frustum[1][0] = clip[3] + clip[0];
+    frustum[1][1] = clip[7] + clip[4];
+    frustum[1][2] = clip[11] + clip[8];
+    frustum[1][3] = clip[15] + clip[12];
+
+    /* Normalize the result */
+    t = sqrt(frustum[1][0] * frustum[1][0] + frustum[1][1] * frustum[1][1] + frustum[1][2] * frustum[1][2]);
+    frustum[1][0] /= t;
+    frustum[1][1] /= t;
+    frustum[1][2] /= t;
+    frustum[1][3] /= t;
+
+    /* Extract the BOTTOM plane */
+    frustum[2][0] = clip[3] + clip[1];
+    frustum[2][1] = clip[7] + clip[5];
+    frustum[2][2] = clip[11] + clip[9];
+    frustum[2][3] = clip[15] + clip[13];
+
+    /* Normalize the result */
+    t = sqrt(frustum[2][0] * frustum[2][0] + frustum[2][1] * frustum[2][1] + frustum[2][2] * frustum[2][2]);
+    frustum[2][0] /= t;
+    frustum[2][1] /= t;
+    frustum[2][2] /= t;
+    frustum[2][3] /= t;
+
+    /* Extract the TOP plane */
+    frustum[3][0] = clip[3] - clip[1];
+    frustum[3][1] = clip[7] - clip[5];
+    frustum[3][2] = clip[11] - clip[9];
+    frustum[3][3] = clip[15] - clip[13];
+
+    /* Normalize the result */
+    t = sqrt(frustum[3][0] * frustum[3][0] + frustum[3][1] * frustum[3][1] + frustum[3][2] * frustum[3][2]);
+    frustum[3][0] /= t;
+    frustum[3][1] /= t;
+    frustum[3][2] /= t;
+    frustum[3][3] /= t;
+
+    /* Extract the FAR plane */
+    frustum[4][0] = clip[3] - clip[2];
+    frustum[4][1] = clip[7] - clip[6];
+    frustum[4][2] = clip[11] - clip[10];
+    frustum[4][3] = clip[15] - clip[14];
+
+    /* Normalize the result */
+    t = sqrt(frustum[4][0] * frustum[4][0] + frustum[4][1] * frustum[4][1] + frustum[4][2] * frustum[4][2]);
+    frustum[4][0] /= t;
+    frustum[4][1] /= t;
+    frustum[4][2] /= t;
+    frustum[4][3] /= t;
+
+    /* Extract the NEAR plane */
+    frustum[5][0] = clip[3] + clip[2];
+    frustum[5][1] = clip[7] + clip[6];
+    frustum[5][2] = clip[11] + clip[10];
+    frustum[5][3] = clip[15] + clip[14];
+
+    /* Normalize the result */
+    t = sqrt(frustum[5][0] * frustum[5][0] + frustum[5][1] * frustum[5][1] + frustum[5][2] * frustum[5][2]);
+    frustum[5][0] /= t;
+    frustum[5][1] /= t;
+    frustum[5][2] /= t;
+    frustum[5][3] /= t;
 }

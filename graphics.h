@@ -38,4 +38,5 @@
 void getMeshLocation(int id, float *xpos, float *ypos, float *zpos);
 int getMeshNumber(int id);
 void getMeshOrientation(int id, float *xaxis, float *yaxis, float *zaxis);
+int isMeshVisible(int id);
 

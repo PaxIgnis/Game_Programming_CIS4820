@@ -11,6 +11,7 @@
 
 #include "graphics.h"
 #include "mesh.h"
+#include "helper.h"
 
 GLubyte  world[WORLDX][WORLDY][WORLDZ];
 
@@ -23,6 +24,8 @@ extern void collisionResponse();
 extern void buildDisplayList();
 extern void mouse(int, int, int, int);
 extern void draw2D();
+
+extern level* currentLevel;
 
 	// stores mesh structures read from .obj files
 struct meshStruct *meshobj;
@@ -701,14 +704,14 @@ int meshNumber;
       glRotatef(90.0, 1.0, 0.0, 0.0);
       glRotatef(0.0, 0.0, 1.0, 0.0);
       glRotatef(0.0, 0.0, 0.0, 1.0);
-      glTranslatef(-50.0, -98.0, -50.0);
+      glTranslatef(-50.0, -150.0, -50.0);
    } else {
       glRotatef(mvx, 1.0, 0.0, 0.0);
       glRotatef(mvy, 0.0, 1.0, 0.0);
       glRotatef(mvz, 0.0, 0.0, 1.0);
 	/* Subtract 0.5 to raise viewpoint slightly above objects. */
 	/* Gives the impression of a head on top of a body. */
-      glTranslatef(vpx, vpy - 0.5, vpz);
+      glTranslatef(vpx, vpy - 1.0, vpz);
    //   glTranslatef(vpx, vpy, vpz);
    }
 
@@ -1305,6 +1308,9 @@ void motion(int x, int y) {
 
 	/* responds to mouse movement when a button is not pressed */
 void passivemotion(int x, int y) {
+   if (currentLevel->worldType == DUNGEON) {
+      meshVisibilityDetection();
+   }
    mvx += (float) y - oldy;
    mvy += (float) x - oldx;
    oldx = x;
@@ -1607,6 +1613,18 @@ int getMeshNumber(int id) {
       return -1;
    }
    
+}
+
+/*
+ * Function: meshVisible
+ * -------------------
+ *
+ * Returns 1 if mesh is visible or 
+ * 0 if the mesh is hidden
+ *
+ */
+int isMeshVisible(int id) {
+   return userMesh[id].drawMesh;
 }
 
 void setTranslateMesh(int id, float xpos, float ypos, float zpos) {

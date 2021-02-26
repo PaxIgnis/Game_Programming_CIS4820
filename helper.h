@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 /*
  * Struct to keep track of different levels
  * worldLegend[*][*][*][1] stores actual values from world array
@@ -31,9 +33,11 @@ void animateMesh(level *currentLevel);
 void clearWorld();
 void createDungeonLevel(level* currentLevel, int direction);
 void createOutdoorLevel(level* currentLevel, int direction);
+bool cubeInFrustum(float x, float y, float z, float size);
 void handleCollision();
 void handleGravityCollision();
 level* initNewLevel(level* currentPos, int direction);
+void meshVisibilityDetection();
 void saveLevel(level* currentLevel);
 void setColors();
 void setUserValues(int var[3], double a, double b, double c);
