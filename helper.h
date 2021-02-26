@@ -29,7 +29,7 @@ typedef struct level {
 
 void animateClouds();
 void animateLava();
-void animateMesh(level *currentLevel);
+void animateMesh(level* currentLevel);
 void clearWorld();
 void createDungeonLevel(level* currentLevel, int direction);
 void createOutdoorLevel(level* currentLevel, int direction);
