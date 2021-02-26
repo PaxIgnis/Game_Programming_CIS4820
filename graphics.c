@@ -27,6 +27,8 @@ extern void draw2D();
 
 extern level* currentLevel;
 
+int drawDistance = -1;
+
 // stores mesh structures read from .obj files
 struct meshStruct* meshobj;
 // number of stored mesh structures in meshobj
@@ -926,7 +928,7 @@ void reshape(int w, int h) {
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
    /* use skySize for far clipping plane */
-   gluPerspective(45.0, (GLfloat)w / (GLfloat)h, 0.1, skySize * 1.5);
+   gluPerspective(45.0, (GLfloat)w / (GLfloat)h, 0.1, drawDistance == -1 ? (float)(skySize * 1.5) : (float)drawDistance);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
    /* set global screen width and height */
@@ -1051,6 +1053,13 @@ void keyboard(unsigned char key, int x, int y) {
       else
          fixedVP = 0;
       break;
+   case '9':
+      if (drawDistance == -1){
+         drawDistance = MAX_DRAW_DISTANCE;
+      } else {
+         drawDistance = -1;
+      }
+      reshape(screenWidth, screenHeight);
    }
 }
 
@@ -1297,7 +1306,7 @@ void motion(int x, int y) {
 
 /* responds to mouse movement when a button is not pressed */
 void passivemotion(int x, int y) {
-   if (currentLevel->worldType == DUNGEON) {
+   if (currentLevel != NULL && currentLevel->worldType == DUNGEON && testWorld == 0) {
       meshVisibilityDetection();
    }
    mvx += (float)y - oldy;

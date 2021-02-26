@@ -34,6 +34,10 @@
 	/* maximum texture width and height */
 #define TEXTURESIZE 256
 
+// Defines max drawing distance of objects when user
+// presses the '9'
+#define MAX_DRAW_DISTANCE 10
+
 
 void getMeshLocation(int id, float* xpos, float* ypos, float* zpos);
 int getMeshNumber(int id);

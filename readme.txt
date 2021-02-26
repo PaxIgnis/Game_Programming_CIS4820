@@ -6,6 +6,13 @@ Game Programming Assignment 3
 ----
 Assignment 3 Specific Notes
 ----
+
+It should be noted that the A3 code runs much slower than previous assignments. This is due 
+to the ineffecient sample code, something I can't do anything about. So if when you are grading this
+and the fps lag is getting too bad, then if you press the '9' key the drawing of the cubes will
+be limited by a draw distance, represented by the macro 'MAX_DRAW_DISTANCE' in graphics.h.
+Currently this value is set to 10 (will only draw up to 10 cubes away from user) but the value can be changed.
+
 Textures have been used for all cubes except the teleportation (grey and white) cubes.
 
 One mesh is placed inside each room in the dungeon level. The type of mesh is randonly selected.
@@ -16,6 +23,9 @@ in the dungeon level and they are visible. Thus when they are not drawn, they ar
 Visibility of the mesh is measured by the use of frustrum culling. The distance the mesh needs to
 be from the user is the size of the largest room in the dungeon. Thus the mesh has to be in the 
 view of the user, and close enough in order to be drawn and animated.
+Meshes are announced when they are drawn and when they are hidden when the user moves using the wasd keys
+and when moving the mouse. They not hidden when the user leaves the dungeon but this is not announced.
+
 
 ----
 General Information

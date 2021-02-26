@@ -124,11 +124,14 @@ level* currentLevel;
 void collisionResponse() {
 
    /* your code for collisions goes here */
-   handleCollision();
-   currentLevel = teleport(currentLevel);
-   if (currentLevel->worldType == DUNGEON) {
-      meshVisibilityDetection();
+   if (!testWorld) {
+      handleCollision();
+      currentLevel = teleport(currentLevel);
+      if (currentLevel->worldType == DUNGEON) {
+         meshVisibilityDetection();
+      }
    }
+   
 }
 
 
