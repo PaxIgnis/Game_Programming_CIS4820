@@ -14,6 +14,7 @@
 #include <sys/time.h> 
 #include "graphics.h"
 #include "helper.h"
+#include "perlin.h"
 
 
 extern GLubyte  world[WORLDX][WORLDY][WORLDZ];
@@ -131,7 +132,7 @@ void collisionResponse() {
          meshVisibilityDetection();
       }
    }
-   
+
 }
 
 
@@ -158,9 +159,10 @@ void draw2D() {
          draw2Dbox(500, 380, 524, 388);
       }
    } else {
-
       /* your code goes here */
-
+      if (displayMap == 1) {
+         drawMap(currentLevel);
+      }
    }
 
 }
@@ -507,6 +509,7 @@ int main(int argc, char** argv) {
 
       /* your code to build the world goes here */
       srand((unsigned)time(NULL));
+      setPerlinSeed(rand() % 500);
       setColors();
 
       // setup level

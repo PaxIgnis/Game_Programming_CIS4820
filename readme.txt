@@ -24,7 +24,28 @@ Visibility of the mesh is measured by the use of frustrum culling. The distance 
 be from the user is the size of the largest room in the dungeon. Thus the mesh has to be in the 
 view of the user, and close enough in order to be drawn and animated.
 Meshes are announced when they are drawn and when they are hidden when the user moves using the wasd keys
-and when moving the mouse. They not hidden when the user leaves the dungeon but this is not announced.
+and when moving the mouse. They are hidden when the user leaves the dungeon but this is not announced.
+
+The default mapview is set to zero, so the user will have to puch 'm' if they want to see the map.
+The regular map for the outdoor world shows:
+	- The users position as a green block
+	- The users view direction (think frustrum) as a green triangle. The edges are 45 degrees from straight ahead, 
+		but the total distance is not as long as the mobs visibility checking distance.
+	- The grey block is the down teleportation stairs.
+	- The three 'levels' in the terrain each are represented by a color. Lava being orange, ground being brownish and top snow/stone being white.
+
+The regular map for the dungeon level shows:
+	- The users position as a green block
+	- The users view direction (think frustrum) as a green triangle. The edges are 45 degrees from straight ahead, 
+		but the total distance is not as long as the mobs visibility checking distance.
+	- The white block is the down teleportation stairs.
+	- The blue blocks are the randomly placed single blocks
+	- The yellow blocks are the mobs
+	- The large black blocks are the rooms
+	- The red is corridors.
+
+In the dungeon, the map only shows mobs if they are visible. This is an easy way to view the visibility checking of the mobs.
+
 
 
 ----

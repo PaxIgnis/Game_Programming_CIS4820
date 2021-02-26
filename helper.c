@@ -41,6 +41,8 @@ extern void hideMesh(int);
 extern int screenWidth;
 extern int screenHeight;
 extern int skySize;
+extern float mvx;
+extern float mvy;
 
 
 /*
@@ -369,6 +371,143 @@ void createOutdoorLevel(level* currentLevel, int direction) {
     currentLevel->worldType = OUTDOOR;
     saveLevel(currentLevel);
 }
+
+void drawMap(level* currentLevel) {
+    GLfloat green[] = { 0.0, 0.5, 0.0, .98 };
+    GLfloat red[] = { 0.5, 0.0, 0.0, .98 };
+    GLfloat blue[] = { 0.0, 0.0, 1, .98 };
+    GLfloat black[] = { 0.1, 0.1, 0.1, .98 };
+    GLfloat white[] = { 1, 1, 1, .98 };
+    GLfloat grey[] = { 0.3, 0.3, 0.3, .98 };
+    GLfloat lightGreen[] = { 0.0, 0.7, 0.0, .2 };
+    GLfloat yellow[] = { 0.8, 0.8, 0.1, .98 };
+    GLfloat orange[] = { 0.95, 0.35, 0.01, .98 };
+    GLfloat snow[] = { 0.9, 0.9, 0.9, .98 };
+    GLfloat brown[] = { 0.25, 0.08, 0.1, .98 };
+
+    float x, y, z;
+
+    if (currentLevel->worldType == DUNGEON) {
+        glClear(GL_DEPTH_BUFFER_BIT);
+        set2Dcolour(black);
+        // draw rooms
+        for (int i = 0; i < 9; i++) {
+            draw2Dbox((int)(((currentLevel->startingPoints[i][1] + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                (int)(((currentLevel->startingPoints[i][0] + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                (int)(((currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                (int)(((currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+        }
+        glClear(GL_DEPTH_BUFFER_BIT);
+        for (int i = 0; i < WORLDX; i++) {
+            for (int j = 0; j < WORLDZ; j++) {
+                // draw corridors
+                if (currentLevel->worldLegend[i][0][j][0] == CORRIDORFLOOR) {
+                    set2Dcolour(red);
+                    draw2Dbox((int)((j * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)((i * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                        (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)(((i + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                }
+                // draw random boxes (to jump over)
+                if (world[i][26][j] == 47) {
+                    set2Dcolour(blue);
+                    draw2Dbox((int)((j * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)((i * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                        (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)(((i + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                }
+                // draw teleportation blocks (stairs)
+                if (world[i][26][j] == 5) {
+                    set2Dcolour(white);
+                    draw2Dbox((int)((j * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)((i * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                        (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)(((i + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                } else if (world[i][26][j] == 21) {
+                    set2Dcolour(grey);
+                    draw2Dbox((int)((j * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)((i * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                        (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)(((i + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                }
+            }
+        }
+        // draw meshes
+        for (int i = 0; i < 9; i++) {
+            glClear(GL_DEPTH_BUFFER_BIT);
+            // don't draw mesh if it is hidden
+            if (isMeshVisible(i) == 1) {
+                getMeshLocation(i, &x, &y, &z);
+                set2Dcolour(yellow);
+                draw2Dbox((int)((((z)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                    (int)((((x)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                    (int)(((z + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                    (int)(((x + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+            }
+        }
+    } else if (currentLevel->worldType == OUTDOOR) {
+        // glClear(GL_DEPTH_BUFFER_BIT);
+        for (int i = 0; i < WORLDX; i++) {
+            for (int j = 0; j < WORLDY; j++) {
+                for (int k = 0; k < WORLDZ; k++) {
+                    // draw land mass (3 levels)
+                    if (world[i][j + 1][k] == 0 && (world[i][j][k] == 48 || world[i][j][k] == 49 || world[i][j][k] == 50 ||
+                        world[i][j][k] == 51 || world[i][j][k] == 52 || world[i][j][k] == 42)) {
+                        if (j <= 24) {
+                            set2Dcolour(orange);
+                        } else if (j > 30) {
+                            set2Dcolour(snow);
+                        } else {
+                            set2Dcolour(brown);
+                        }
+                        draw2Dbox((int)((((k)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)((((i)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                            (int)(((k + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)(((i + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                    }
+                    // draw teleportation blocks (stairs)
+                    if (world[i][j][k] == 21) {
+                        set2Dcolour(grey);
+                        draw2Dbox((int)((((k)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)((((i)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                            (int)(((k + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)(((i + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                    }
+                }
+            }
+        }
+    }
+
+    // draw user
+    getViewPosition(&x, &y, &z);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    set2Dcolour(green);
+    draw2Dbox((int)((((-z) - .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)((((-x) - .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+        (int)(((-z + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)(((-x + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+    glClear(GL_DEPTH_BUFFER_BIT);
+    // draw user viewing direction
+    float rotx = (mvx / 180.0 * 3.141592);
+    float roty = (mvy / 180.0 * 3.141592);
+    // forward
+    float vpx = x - sin(roty) * 15;
+    float vpz = z + cos(roty) * 15;
+    // left
+    float lvpx = vpx + cos(roty) * 15;
+    float lvpz = vpz + sin(roty) * 15;
+    // right
+    float rvpx = vpx - cos(roty) * 15;
+    float rvpz = vpz - sin(roty) * 15;
+    set2Dcolour(lightGreen);
+    draw2Dtriangle((int)((((-z)) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)((((-x)) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+        (int)(((-lvpz) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)(((-lvpx) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+        (int)(((-rvpz) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)(((-rvpx) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+}
+
 
 /*
  * Function: getDistanceBetween(float x1, float y1, float x2, float y2)
@@ -1436,8 +1575,6 @@ void handleCollision() {
         }
     }
 }
-
-
 
 float frustum[6][4];
 

@@ -34,6 +34,7 @@ void clearWorld();
 void createDungeonLevel(level* currentLevel, int direction);
 void createOutdoorLevel(level* currentLevel, int direction);
 bool cubeInFrustum(float x, float y, float z, float size);
+void drawMap(level* currentLevel);
 void handleCollision();
 void handleGravityCollision();
 level* initNewLevel(level* currentPos, int direction);
@@ -42,3 +43,10 @@ void saveLevel(level* currentLevel);
 void setColors();
 void setUserValues(int var[3], double a, double b, double c);
 level* teleport(level* currentLevel);
+
+/* 2D drawing functions */
+extern void draw2Dline(int, int, int, int, int);
+extern void draw2Dbox(int, int, int, int);
+extern void draw2Dtriangle(int, int, int, int, int, int);
+extern void set2Dcolour(float[]);
+extern void draw2Dquad(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4);

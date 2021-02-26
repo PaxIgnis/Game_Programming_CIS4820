@@ -50,3 +50,17 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+a1
+
+.vscode/
+
+models/._readme.txt
+
+*.DS_Store
+
+textures/._0.ppm
+
+textures/._50.ppm
+
+textures/._7.ppm

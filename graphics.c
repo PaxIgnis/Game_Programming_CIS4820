@@ -139,7 +139,7 @@ short tubeVisible[TUBE_COUNT];
 /* flag indicating the user wants the cube in front of them removed */
 int space = 0;
 /* flag indicates if map is to be printed */
-int displayMap = 1;
+int displayMap = 0;
 /* flag indicating a fixed viewpoint - not updated by mouse/keyboard */
 int fixedVP = 0;
 
@@ -695,7 +695,7 @@ void display(void) {
       // Fixed position - mvx =90; mvy =0; mvz =0;
       // vpx =-50; vpy =-98; vpz =-50;
       glRotatef(90.0, 1.0, 0.0, 0.0);
-      glRotatef(0.0, 0.0, 1.0, 0.0);
+      glRotatef(90.0, 0.0, 1.0, 0.0);
       glRotatef(0.0, 0.0, 0.0, 1.0);
       glTranslatef(-50.0, -150.0, -50.0);
    } else {
