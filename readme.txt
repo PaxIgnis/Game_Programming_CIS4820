@@ -13,20 +13,15 @@ and the fps lag is getting too bad, then if you press the '9' key the drawing of
 be limited by a draw distance, represented by the macro 'MAX_DRAW_DISTANCE' in graphics.h.
 Currently this value is set to 10 (will only draw up to 10 cubes away from user) but the value can be changed.
 
-Textures have been used for all cubes except the teleportation (grey and white) cubes.
+1. Timing
+---------------
+Clouds didn't change as timing was already implemented in A2.
+Timing was used for the ai for the mobs and for the movement of the lava.
 
-One mesh is placed inside each room in the dungeon level. The type of mesh is randonly selected.
-Meshes randomly move around the room they are placed inside. They do not leave the room and they do not
-collide with any of the cubes inside of the room.
-Meshes are hidden when user leaves dungeon. They are only animated when user is 
-in the dungeon level and they are visible. Thus when they are not drawn, they are not moving.
-Visibility of the mesh is measured by the use of frustrum culling. The distance the mesh needs to
-be from the user is the size of the largest room in the dungeon. Thus the mesh has to be in the 
-view of the user, and close enough in order to be drawn and animated.
-Meshes are announced when they are drawn and when they are hidden when the user moves using the wasd keys
-and when moving the mouse. They are hidden when the user leaves the dungeon but this is not announced.
-
+2. Displaying a Two Dimensional World Map
+---------------
 The default mapview is set to zero, so the user will have to puch 'm' if they want to see the map.
+The maps are scaled to the screen, and maintain their aspect ratio.
 The regular map for the outdoor world shows:
 	- The users position as a green block
 	- The users view direction (think frustrum) as a green triangle. The edges are 45 degrees from straight ahead, 
@@ -46,10 +41,38 @@ The regular map for the dungeon level shows:
 
 In the dungeon, the map only shows mobs if they are visible. This is an easy way to view the visibility checking of the mobs.
 
+3. Textured Cubes
+---------------
+Textures have been used for all cubes except the teleportation (grey and white) cubes.
+Only one additional texture was added, it was a darker version of the lava.
+
+4. Animated Mesh Movement
+---------------
+
+One mesh is placed inside each room in the dungeon level. The type of mesh is randonly selected.
+Meshes randomly move around the room they are placed inside. They do not leave the room and they do not
+collide with any of the cubes inside of the room. Their simple ai just picks a direction of movement, moves
+that direction and then randomly picks another direction and then repeats. The have collision detection,
+although this means that sometimes they get stuck between the random blocks.
+
+5. Visibility of Objects
+---------------
+
+Meshes are hidden when user leaves dungeon. They are only animated when user is 
+in the dungeon level and they are visible. Thus when they are not drawn, they are not moving.
+Visibility of the mesh is measured by the use of frustrum culling. The distance the mesh needs to
+be from the user is the size of the largest possible room in the dungeon. Thus the mesh has to be in the 
+view of the user, and close enough in order to be drawn and animated.
+Meshes are announced when they are drawn and when they are hidden when the user moves using the wasd keys
+and when moving the mouse. They are hidden when the user leaves the dungeon but this is not announced.
+Checkout the map if you want to see the mobs in realtime.
+
+
+
 
 
 ----
-General Information
+General Information (from A1/A2)
 ----
 
 Player is initially placed in the 'outdoor' level, near to the teleportation portals.
