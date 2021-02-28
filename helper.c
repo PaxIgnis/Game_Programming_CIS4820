@@ -54,7 +54,7 @@ extern float mvy;
  */
 void animateLava() {
     static struct timeval t, t1;
-    static float textureOffset = 0.0;
+    static float textureOffset = -1.0;
     static int initialized;
 
     if (initialized == 0) {
@@ -295,7 +295,7 @@ void createOutdoorLevel(level* currentLevel, int direction) {
     // build terain using perlin
     for (int i = 0; i < WORLDX; i++) {
         for (int j = 0; j < WORLDZ; j++) {
-            float height = perlin2d(i, j, 0.03, 4);
+            float height = perlin2d(i, j, 0.03, 2);
             int adjustedHeight = (int)14 + ((float)height * 24.0);
             // create a checkerboard pattern
             if (((adjustedHeight % 2 == 0) && ((i + j) % 2 != 0)) || ((adjustedHeight % 2 != 0) && ((i + j) % 2 == 0))) {
