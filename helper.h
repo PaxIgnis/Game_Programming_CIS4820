@@ -12,9 +12,14 @@ typedef struct level {
     int lastLocation[3];
     int lastOrientation[3];
     int worldType;
+    // Fog of War
+    int visitedWorld[WORLDX][WORLDZ];
+    int visitedRooms[9];
+
     //used for dungeon levels
     int startingPoints[9][2]; // Room 0 is bottom left, room 1 is bottom middle...
     int roomSizes[9][2]; // size includes outside wall
+
 } level;
 
 
@@ -35,6 +40,9 @@ void createDungeonLevel(level* currentLevel, int direction);
 void createOutdoorLevel(level* currentLevel, int direction);
 bool cubeInFrustum(float x, float y, float z, float size);
 void drawMap(level* currentLevel);
+void drawFogMap(level *currentLevel);
+void findNearestCorridor(int x, int z, int newx, int newz, int inputDirection, int distance, int maxMeasuredDist, level *currentLevel);
+float getDistanceBetween(float x1, float y1, float x2, float y2);
 void handleCollision();
 void handleGravityCollision();
 level* initNewLevel(level* currentPos, int direction);
@@ -43,6 +51,7 @@ void saveLevel(level* currentLevel);
 void setColors();
 void setUserValues(int var[3], double a, double b, double c);
 level* teleport(level* currentLevel);
+void updateFog(level* currentLevel);
 
 /* 2D drawing functions */
 extern void draw2Dline(int, int, int, int, int);

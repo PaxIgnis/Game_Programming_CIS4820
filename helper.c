@@ -369,9 +369,18 @@ void createOutdoorLevel(level* currentLevel, int direction) {
     }
     setViewOrientation(0, 135, 0);
     currentLevel->worldType = OUTDOOR;
+    updateFog(currentLevel);
     saveLevel(currentLevel);
 }
 
+
+/*
+ * Function: drawMap(level *currentLevel)
+ * -------------------
+ *
+ * Draws the regular 2D map
+ *
+ */
 void drawMap(level* currentLevel) {
     GLfloat green[] = { 0.0, 0.5, 0.0, .98 };
     GLfloat red[] = { 0.5, 0.0, 0.0, .98 };
@@ -506,6 +515,277 @@ void drawMap(level* currentLevel) {
         (int)(((-lvpx) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
         (int)(((-rvpz) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
         (int)(((-rvpx) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+}
+
+
+/*
+ * Function: drawFogMap(level *currentLevel)
+ * -------------------
+ *
+ * Draws the fog of war 2D map
+ *
+ */
+void drawFogMap(level *currentLevel) {
+    GLfloat green[] = { 0.0, 0.5, 0.0, .98 };
+    GLfloat red[] = { 0.5, 0.0, 0.0, .98 };
+    GLfloat blue[] = { 0.0, 0.0, 1, .98 };
+    GLfloat black[] = { 0.1, 0.1, 0.1, .98 };
+    GLfloat white[] = { 1, 1, 1, .98 };
+    GLfloat grey[] = { 0.3, 0.3, 0.3, .98 };
+    GLfloat lightGreen[] = { 0.0, 0.7, 0.0, .2 };
+    GLfloat yellow[] = { 0.8, 0.8, 0.1, .98 };
+    GLfloat orange[] = { 0.95, 0.35, 0.01, .98 };
+    GLfloat snow[] = { 0.9, 0.9, 0.9, .98 };
+    GLfloat brown[] = { 0.25, 0.08, 0.1, .98 };
+
+    GLfloat fog[] = { 0.05, 0.05, 0.05, .9 };
+    GLfloat purple[] = { 0.74, 0.33, 0.92, .98 };
+
+    float x, y, z;
+
+    if (currentLevel->worldType == DUNGEON) {
+        // draw rooms
+        for (int i = 0; i < 9; i++) {
+            if (currentLevel->visitedRooms[i] == 1) {
+                glClear(GL_DEPTH_BUFFER_BIT);
+                set2Dcolour(black);
+                draw2Dbox((int)(((currentLevel->startingPoints[i][1] + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                    (int)(((currentLevel->startingPoints[i][0] + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                    (int)(((currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                    (int)(((currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                glClear(GL_DEPTH_BUFFER_BIT);
+                for (int j = currentLevel->startingPoints[i][0]; j < (currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] + 2); j++) {
+                    for (int k = currentLevel->startingPoints[i][1]; k < (currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] + 2); k++) {
+                        // draw random boxes (to jump over)
+                        if (world[j][26][k] == 47) {
+                            set2Dcolour(blue);
+                            draw2Dbox((int)((k * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                                (int)((j * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                                (int)(((k + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                                (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                        }
+                        // draw teleportation blocks (stairs)
+                        if (world[j][26][k] == 5) {
+                            set2Dcolour(white);
+                            draw2Dbox((int)((k * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                                (int)((j * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                                (int)(((k + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                                (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                        } else if (world[j][26][k] == 21) {
+                            set2Dcolour(grey);
+                            draw2Dbox((int)((k * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                                (int)((j * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                                (int)(((k + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                                (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                        }
+                        // draw doorway posts
+                        if (currentLevel->worldLegend[j][0][k][0] == DOORWAYPOST) {
+                            set2Dcolour(purple);
+                            draw2Dbox((int)((k * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                                (int)((j * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                                (int)(((k + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                                (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                        }
+                    }
+
+                }
+                // don't draw mesh if it is hidden
+                if (isMeshVisible(i) == 1) {
+                    getMeshLocation(i, &x, &y, &z);
+                    set2Dcolour(yellow);
+                    draw2Dbox((int)((((z)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)((((x)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                        (int)(((z + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)(((x + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                }
+            }
+        }
+        glClear(GL_DEPTH_BUFFER_BIT);
+        for (int i = 0; i < WORLDX; i++) {
+            for (int j = 0; j < WORLDZ; j++) {
+                if (currentLevel->visitedWorld[i][j] == 1) {
+                    // draw corridors
+                    if (currentLevel->worldLegend[i][0][j][0] == CORRIDORFLOOR) {
+                        set2Dcolour(red);
+                        draw2Dbox((int)((j * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)((i * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                            (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)(((i + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                    }
+                }
+            }
+        }
+    } else if (currentLevel->worldType == OUTDOOR) {
+        for (int i = 0; i < WORLDX; i++) {
+            for (int j = 0; j < WORLDY; j++) {
+                for (int k = 0; k < WORLDZ; k++) {
+                    // draw land mass (3 levels)
+                    if (world[i][j + 1][k] == 0 && (world[i][j][k] == 48 || world[i][j][k] == 49 || world[i][j][k] == 50 ||
+                        world[i][j][k] == 51 || world[i][j][k] == 52 || world[i][j][k] == 42)) {
+                        if (currentLevel->visitedWorld[i][k] == 0) {
+                            set2Dcolour(fog);
+                        } else if (j <= 24) {
+                            set2Dcolour(orange);
+                        } else if (j > 30) {
+                            set2Dcolour(snow);
+                        } else {
+                            set2Dcolour(brown);
+                        }
+                        draw2Dbox((int)((((k)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)((((i)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                            (int)(((k + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)(((i + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                    }
+                    // draw teleportation blocks (stairs)
+                    if (world[i][j][k] == 21) {
+                        set2Dcolour(grey);
+                        draw2Dbox((int)((((k)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)((((i)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                            (int)(((k + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                            (int)(((i + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                    }
+                }
+            }
+        }
+    }
+
+    // draw user
+    getViewPosition(&x, &y, &z);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    set2Dcolour(green);
+    draw2Dbox((int)((((-z) - .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)((((-x) - .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+        (int)(((-z + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)(((-x + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+    glClear(GL_DEPTH_BUFFER_BIT);
+    // draw user viewing direction
+    float rotx = (mvx / 180.0 * 3.141592);
+    float roty = (mvy / 180.0 * 3.141592);
+    // forward
+    float vpx = x - sin(roty) * 15;
+    float vpz = z + cos(roty) * 15;
+    // left
+    float lvpx = vpx + cos(roty) * 15;
+    float lvpz = vpz + sin(roty) * 15;
+    // right
+    float rvpx = vpx - cos(roty) * 15;
+    float rvpz = vpz - sin(roty) * 15;
+    set2Dcolour(lightGreen);
+    draw2Dtriangle((int)((((-z)) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)((((-x)) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+        (int)(((-lvpz) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)(((-lvpx) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+        (int)(((-rvpz) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+        (int)(((-rvpx) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+}
+
+
+/*
+ * Function: drawFogMap(level *currentLevel)
+ * -------------------
+ *
+ * Draws the fog of war 2D map
+ *
+ */
+void updateFog(level* currentLevel) {
+    float x, y, z;
+    getViewPosition(&x, &y, &z);
+    x = -x;
+    y = -y;
+    z = -z;
+    int radius = 8;
+    int corRadius = 4;
+    if (currentLevel->worldType == DUNGEON) {
+        // if user in room    
+        for (int i = 0; i < 9; i++) {
+            // mark room as visited
+            if ((int)floor(z) >= (currentLevel->startingPoints[i][1] + 1) &&
+                (int)floor(x) >= (currentLevel->startingPoints[i][0] + 1) &&
+                (int)ceil(z) <= (currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] + 1) &&
+                (int)ceil(x) <= (currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] + 1)) {
+                currentLevel->visitedRooms[i] = 1;
+            }
+        }
+        // mark near corridor floors as visited
+        if (currentLevel->worldLegend[(int)floor(x)][0][(int)floor(z)][0] == CORRIDORFLOOR) {
+            findNearestCorridor((int)floor(x), (int)floor(z), (int)floor(x), (int)floor(z), -1, 6, 4, currentLevel);
+        }
+    } else if (currentLevel->worldType == OUTDOOR) {
+        for (int i = fmax(x - radius, 0); i < fmin(x + radius, WORLDX); i++) {
+            for (int j = fmax(z - radius, 0); j < fmin(z + radius, WORLDZ); j++) {
+                // mark area in radius as visited
+                if (getDistanceBetween(x, z, i, j) <= (radius-1)) {
+                    currentLevel->visitedWorld[i][j] = 1;
+                }
+            }
+        }
+    }
+}
+
+
+/*
+ * Function: findNearestCorridor(int x, int z, int newx, int newz, int inputDirection, int distance, int maxMeasuredDist, level *currentLevel)
+ * -------------------
+ *
+ * Recursively finds connected corridor that is nearby, marking it as visited
+ * 
+ * int x and z are the coordinated of player
+ * int newx and newz are coordinates of cube being checked
+ * int inputDirection is the direction the the parent calling function is branching (think recursive tree)
+ *      0 means parent just called this func moving in up direction
+ *      1 means parent just called this func moving in right direction
+ *      2 means parent just called this func moving in down direction
+ *      3 means parent just called this func moving in left direction
+ *      0 means parent just called this func from starting position
+ * int distance is how many levels in the tree before returning
+ * int maxMeasurableDistance is the max calculated geometric distance between the starting location and current location
+ * level *currentLevel is the struct holding the current level data 
+ *
+ */
+void findNearestCorridor(int x, int z, int newx, int newz, int inputDirection, int distance, int maxMeasuredDist, level *currentLevel) {
+    if (distance <= 0) return;
+    if (getDistanceBetween(x, z, newx, newz) >= maxMeasuredDist) return;
+    if (currentLevel->worldLegend[newx][0][newz][0] != CORRIDORFLOOR) return;
+    currentLevel->visitedWorld[newx][newz] = 1;
+    if (inputDirection == 0) {
+        // left
+        findNearestCorridor(x, z, newx, newz - 1, 1, distance-1, maxMeasuredDist, currentLevel);
+        // down
+        findNearestCorridor(x, z, newx - 1, newz, 0, distance-1, maxMeasuredDist, currentLevel);
+        // right
+        findNearestCorridor(x, z, newx, newz + 1, 3, distance-1, maxMeasuredDist, currentLevel);
+    } else if (inputDirection == 1) {
+        // up
+        findNearestCorridor(x, z, newx + 1, newz, 2, distance-1, maxMeasuredDist, currentLevel);
+        // left
+        findNearestCorridor(x, z, newx, newz - 1, 1, distance-1, maxMeasuredDist, currentLevel);
+        // down
+        findNearestCorridor(x, z, newx - 1, newz, 0, distance-1, maxMeasuredDist, currentLevel);
+    } else if (inputDirection == 2) {
+        // left
+        findNearestCorridor(x, z, newx, newz - 1, 1, distance-1, maxMeasuredDist, currentLevel);
+        // up
+        findNearestCorridor(x, z, newx + 1, newz, 2, distance-1, maxMeasuredDist, currentLevel);
+        // right
+        findNearestCorridor(x, z, newx, newz + 1, 3, distance-1, maxMeasuredDist, currentLevel);
+    } else if (inputDirection == 3) {
+        // up
+        findNearestCorridor(x, z, newx + 1, newz, 2, distance-1, maxMeasuredDist, currentLevel);
+        // right
+        findNearestCorridor(x, z, newx, newz + 1, 3, distance-1, maxMeasuredDist, currentLevel);
+        // down
+        findNearestCorridor(x, z, newx - 1, newz, 0, distance-1, maxMeasuredDist, currentLevel);
+    } else {
+        // up
+        findNearestCorridor(x, z, newx + 1, newz, 2, distance-1, maxMeasuredDist, currentLevel);
+        // right
+        findNearestCorridor(x, z, newx, newz + 1, 3, distance-1, maxMeasuredDist, currentLevel);
+        // down
+        findNearestCorridor(x, z, newx - 1, newz, 0, distance-1, maxMeasuredDist, currentLevel);
+         // left
+        findNearestCorridor(x, z, newx, newz - 1, 1, distance-1, maxMeasuredDist, currentLevel);
+    }
+    return;
 }
 
 
@@ -731,8 +1011,12 @@ level* initNewLevel(level* currentPos, int direction) {
             for (int k = 0; k < WORLDZ; k++) {
                 l->worldLegend[i][j][k][0] = 0;
                 l->worldLegend[i][j][k][1] = 0;
+                l->visitedWorld[i][k] = 0;
             }
         }
+    }
+    for (int i = 0; i < 9; i++) {
+        l->visitedRooms[i] = 0;
     }
 
     return l;

@@ -39,6 +39,16 @@ The regular map for the dungeon level shows:
 	- The large black blocks are the rooms
 	- The red is corridors.
 
+The fog of war map for the outdoor world shows everything as grey (fog) except for
+the player and the direction of the players view. As the player moves around the map, the area around the player becomes
+cleared of fog and shows the regular map (as discussed above). The clearing of the fog works by measuring the distance from the
+user, so fog is cleared in a circle around the player.
+
+The fog of war map for the dungeon level starts out with showing the room where the player spawns. Pink blocks have been added
+to represent the door posts so the player knows where the doorways are located. When the player enters a corridor the corridor 
+around the player is shown on the map, including the area around corners before the player reaches them. After the player has traversed
+the entire map, the fog of war map will be identical the regular map except for the addition of the pink blocks representing door posts.
+
 In the dungeon, the map only shows mobs if they are visible. This is an easy way to view the visibility checking of the mobs.
 
 3. Textured Cubes
