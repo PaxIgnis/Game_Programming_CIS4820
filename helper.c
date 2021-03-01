@@ -103,9 +103,9 @@ void animateClouds() {
                 float height = perlin2d(x + i, z, 0.1, 1);
 
                 if ((int)((float)height * 24.0) > 18) {
-                    world[x][40][z] = 5;
+                    world[x][45][z] = 5;
                 } else {
-                    world[x][40][z] = 0;
+                    world[x][45][z] = 0;
                 }
             }
         }
