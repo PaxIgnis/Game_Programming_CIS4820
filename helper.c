@@ -148,6 +148,8 @@ void animateMesh(level* currentLevel) {
             int meshType = getMeshNumber(i);
             if (isMeshVisible(i) == 1) {
                 getMeshLocation(i, &x, &y, &z);
+                x = x - 0.5;
+                z = z - 0.5;
                 getMeshOrientation(i, &xrot, &yrot, &zrot);
                 // cow (0) faces right and all else left on 0 degrees y rot
                 if (meshType == 0) {
@@ -163,55 +165,47 @@ void animateMesh(level* currentLevel) {
                 // moving in left direction
                 if ((int)yrot == 0) {
                     if ((int)floor(x) > currentLevel->startingPoints[i][0] + 2 &&
-                        world[(int)floor(x)][26][(int)floor(z)] == 0 &&
-                        world[(int)floor(x) - 1][26][(int)floor(z)] == 0 &&
-                        world[(int)floor(x)][26][(int)floor(z) - 1] == 0 &&
-                        world[(int)floor(x) - 1][26][(int)floor(z) - 1] == 0 &&
-                        world[(int)floor(x)][26][(int)floor(z) + 1] == 0 &&
-                        world[(int)floor(x) - 1][26][(int)floor(z) + 1] == 0) {
+                        world[(int)floor(x - 1)][26][(int)floor(z)] == 0
+                        ) {
                         x = x - speed;
                     } else {
                         int direction = rand() % 3;
                         yrot = direction == 1 ? 90 : (direction == 2 ? 180 : 270);
+                        x = floor(x);
+                        z = floor(z);
                     }
                 } else if ((int)yrot == 90) { // moving up direction
-                    if ((int)floor(z) < (currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] - 2) &&
-                        world[(int)floor(x)][26][(int)ceil(z)] == 0 &&
-                        world[(int)floor(x)][26][(int)ceil(z) + 1] == 0 &&
-                        world[(int)floor(x) - 1][26][(int)ceil(z)] == 0 &&
-                        world[(int)floor(x) - 1][26][(int)ceil(z) + 1] == 0 &&
-                        world[(int)floor(x) + 1][26][(int)ceil(z)] == 0 &&
-                        world[(int)floor(x) + 1][26][(int)ceil(z) + 1] == 0) {
+                    if ((int)floor(z) < (currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] - 1) &&
+                        world[(int)floor(x)][26][(int)floor(z + 1)] == 0
+                        ) {
                         z = z + speed;
                     } else {
                         int direction = rand() % 3;
                         yrot = direction == 1 ? 0 : (direction == 2 ? 180 : 270);
+                        x = floor(x);
+                        z = floor(z);
                     }
                 } else if ((int)yrot == 180) { // moving right direction
-                    if ((int)ceil(x) < (currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] - 2) &&
-                        world[(int)ceil(x)][(int)floor(26)][(int)floor(z)] == 0 &&
-                        world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z)] == 0 &&
-                        world[(int)ceil(x)][(int)floor(26)][(int)floor(z) + 1] == 0 &&
-                        world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z) + 1] == 0 &&
-                        world[(int)ceil(x)][(int)floor(26)][(int)floor(z) - 1] == 0 &&
-                        world[(int)ceil(x) + 1][(int)floor(26)][(int)floor(z) - 1] == 0) {
+                    if ((int)floor(x) < (currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] - 1) &&
+                        world[(int)floor(x + 1)][26][(int)floor(z)] == 0
+                        ) {
                         x = x + speed;
                     } else {
                         int direction = rand() % 3;
                         yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 270);
+                        x = floor(x);
+                        z = floor(z);
                     }
                 } else if ((int)yrot == 270) { // moving down direction
                     if ((int)floor(z) > (currentLevel->startingPoints[i][1] + 2) &&
-                        world[(int)floor(x)][26][(int)floor(z)] == 0 &&
-                        world[(int)floor(x)][26][(int)floor(z) - 1] == 0 &&
-                        world[(int)floor(x) + 1][26][(int)floor(z)] == 0 &&
-                        world[(int)floor(x) + 1][26][(int)floor(z) - 1] == 0 &&
-                        world[(int)floor(x) - 1][26][(int)floor(z)] == 0 &&
-                        world[(int)floor(x) - 1][26][(int)floor(z) - 1] == 0) {
+                        world[(int)floor(x)][26][(int)floor(z - 1)] == 0
+                        ) {
                         z = z - speed;
                     } else {
                         int direction = rand() % 3;
                         yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 180);
+                        x = floor(x);
+                        z = floor(z);
                     }
                 }
                 if (meshType == 0) {
@@ -224,12 +218,13 @@ void animateMesh(level* currentLevel) {
                 } else if ((int)yrot < 0) {
                     yrot = yrot + 360;
                 }
-                setTranslateMesh(i, x, y, z);
+                setTranslateMesh(i, x + 0.5, y, z + 0.5);
                 setRotateMesh(i, xrot, yrot, zrot);
             }
         }
         gettimeofday(&t, NULL);
     }
+    meshVisibilityDetection();
 }
 
 
@@ -525,7 +520,7 @@ void drawMap(level* currentLevel) {
  * Draws the fog of war 2D map
  *
  */
-void drawFogMap(level *currentLevel) {
+void drawFogMap(level* currentLevel) {
     GLfloat green[] = { 0.0, 0.5, 0.0, .98 };
     GLfloat red[] = { 0.5, 0.0, 0.0, .98 };
     GLfloat blue[] = { 0.0, 0.0, 1, .98 };
@@ -714,7 +709,7 @@ void updateFog(level* currentLevel) {
         for (int i = fmax(x - radius, 0); i < fmin(x + radius, WORLDX); i++) {
             for (int j = fmax(z - radius, 0); j < fmin(z + radius, WORLDZ); j++) {
                 // mark area in radius as visited
-                if (getDistanceBetween(x, z, i, j) <= (radius-1)) {
+                if (getDistanceBetween(x, z, i, j) <= (radius - 1)) {
                     currentLevel->visitedWorld[i][j] = 1;
                 }
             }
@@ -728,7 +723,7 @@ void updateFog(level* currentLevel) {
  * -------------------
  *
  * Recursively finds connected corridor that is nearby, marking it as visited
- * 
+ *
  * int x and z are the coordinated of player
  * int newx and newz are coordinates of cube being checked
  * int inputDirection is the direction the the parent calling function is branching (think recursive tree)
@@ -739,51 +734,51 @@ void updateFog(level* currentLevel) {
  *      0 means parent just called this func from starting position
  * int distance is how many levels in the tree before returning
  * int maxMeasurableDistance is the max calculated geometric distance between the starting location and current location
- * level *currentLevel is the struct holding the current level data 
+ * level *currentLevel is the struct holding the current level data
  *
  */
-void findNearestCorridor(int x, int z, int newx, int newz, int inputDirection, int distance, int maxMeasuredDist, level *currentLevel) {
+void findNearestCorridor(int x, int z, int newx, int newz, int inputDirection, int distance, int maxMeasuredDist, level* currentLevel) {
     if (distance <= 0) return;
     if (getDistanceBetween(x, z, newx, newz) >= maxMeasuredDist) return;
     if (currentLevel->worldLegend[newx][0][newz][0] != CORRIDORFLOOR) return;
     currentLevel->visitedWorld[newx][newz] = 1;
     if (inputDirection == 0) {
         // left
-        findNearestCorridor(x, z, newx, newz - 1, 1, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx, newz - 1, 1, distance - 1, maxMeasuredDist, currentLevel);
         // down
-        findNearestCorridor(x, z, newx - 1, newz, 0, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx - 1, newz, 0, distance - 1, maxMeasuredDist, currentLevel);
         // right
-        findNearestCorridor(x, z, newx, newz + 1, 3, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx, newz + 1, 3, distance - 1, maxMeasuredDist, currentLevel);
     } else if (inputDirection == 1) {
         // up
-        findNearestCorridor(x, z, newx + 1, newz, 2, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx + 1, newz, 2, distance - 1, maxMeasuredDist, currentLevel);
         // left
-        findNearestCorridor(x, z, newx, newz - 1, 1, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx, newz - 1, 1, distance - 1, maxMeasuredDist, currentLevel);
         // down
-        findNearestCorridor(x, z, newx - 1, newz, 0, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx - 1, newz, 0, distance - 1, maxMeasuredDist, currentLevel);
     } else if (inputDirection == 2) {
         // left
-        findNearestCorridor(x, z, newx, newz - 1, 1, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx, newz - 1, 1, distance - 1, maxMeasuredDist, currentLevel);
         // up
-        findNearestCorridor(x, z, newx + 1, newz, 2, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx + 1, newz, 2, distance - 1, maxMeasuredDist, currentLevel);
         // right
-        findNearestCorridor(x, z, newx, newz + 1, 3, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx, newz + 1, 3, distance - 1, maxMeasuredDist, currentLevel);
     } else if (inputDirection == 3) {
         // up
-        findNearestCorridor(x, z, newx + 1, newz, 2, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx + 1, newz, 2, distance - 1, maxMeasuredDist, currentLevel);
         // right
-        findNearestCorridor(x, z, newx, newz + 1, 3, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx, newz + 1, 3, distance - 1, maxMeasuredDist, currentLevel);
         // down
-        findNearestCorridor(x, z, newx - 1, newz, 0, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx - 1, newz, 0, distance - 1, maxMeasuredDist, currentLevel);
     } else {
         // up
-        findNearestCorridor(x, z, newx + 1, newz, 2, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx + 1, newz, 2, distance - 1, maxMeasuredDist, currentLevel);
         // right
-        findNearestCorridor(x, z, newx, newz + 1, 3, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx, newz + 1, 3, distance - 1, maxMeasuredDist, currentLevel);
         // down
-        findNearestCorridor(x, z, newx - 1, newz, 0, distance-1, maxMeasuredDist, currentLevel);
-         // left
-        findNearestCorridor(x, z, newx, newz - 1, 1, distance-1, maxMeasuredDist, currentLevel);
+        findNearestCorridor(x, z, newx - 1, newz, 0, distance - 1, maxMeasuredDist, currentLevel);
+        // left
+        findNearestCorridor(x, z, newx, newz - 1, 1, distance - 1, maxMeasuredDist, currentLevel);
     }
     return;
 }
@@ -1432,15 +1427,20 @@ void createDungeonLevel(level* currentLevel, int direction) {
     // loop through 9 rooms
     for (int i = 0; i < 9; i++) {
         // select random starting location in room
-        int x = (rand() % (roomSizes[i][0] + startingPoints[i][0] - 2 - (startingPoints[i][0] + 2) + 1)) + startingPoints[i][0] + 2;
-        float y = 26.5;
-        int z = (rand() % (roomSizes[i][1] + startingPoints[i][1] - 2 - (startingPoints[i][1] + 2) + 1)) + startingPoints[i][1] + 2;
+        int x, z;
+        float y;
+        // don't place mesh inside a cube
+        do {
+            x = (rand() % (roomSizes[i][0] + startingPoints[i][0] - 2 - (startingPoints[i][0] + 2) + 1)) + startingPoints[i][0] + 2;
+            y = 26.5;
+            z = (rand() % (roomSizes[i][1] + startingPoints[i][1] - 2 - (startingPoints[i][1] + 2) + 1)) + startingPoints[i][1] + 2;
+        } while (world[x][26][z] != 0);
 
         // pick random mesh
         int type = (rand() % 4);
         //draw mesh
         // mesh id matches which room they are placed in (i.e. mesh 1 is in room 1)
-        setMeshID(i, type, x, type >= 2 ? 26 : y, z);
+        setMeshID(i, type, x + 0.5, type >= 2 ? 26 : y, z + 0.5);
         setRotateMesh(i, 0.0, 0, 0.0);
         setScaleMesh(i, 0.5);
         hideMesh(i);
