@@ -857,7 +857,7 @@ void meshVisibilityDetection() {
 
 
 /*
- * Function: currentLevel
+ * Function: teleport(level* currentLevel) 
  * -------------------
  *
  * Checks if player is on teleport cube
@@ -1405,7 +1405,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
     for (i = x - 1; i < x + 4; i++) {
         for (j = z - 1; j < z + 4; j++) {
             if (world[i][26][j] == 47) {
-                world[i][26][j] == 0;
+                world[i][26][j] = 0;
             }
         }
     }
@@ -1426,7 +1426,6 @@ void createDungeonLevel(level* currentLevel, int direction) {
     }
 
     // create and places Meshes
-
     // loop through 9 rooms
     for (int i = 0; i < 9; i++) {
         // select random starting location in room
@@ -1478,7 +1477,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
  * Function: setColors
  * -------------------
  *
- * Sets all of the custom colors
+ * Sets all of the custom colors and textures
  *
  */
 void setColors() {

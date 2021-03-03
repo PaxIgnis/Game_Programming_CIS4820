@@ -13,6 +13,13 @@ and the fps lag is getting too bad, then if you press the '9' key the drawing of
 be limited by a draw distance, represented by the macro 'MAX_DRAW_DISTANCE' in graphics.h.
 Currently this value is set to 10 (will only draw up to 10 cubes away from user) but the value can be changed.
 
+Pressing 0 will give the user a birds eye view of the world.
+
+Prof said using the diagonal distance of maximum possible room size for visibility checking
+distance was a good idead, so this was used.
+Prof said it was fine if mobs were not shown on the map if they were not in the users viewing area.
+Prof said it was fine if mobs were only moving when in the viewing area of the user.
+
 1. Timing
 ---------------
 Clouds didn't change as timing was already implemented in A2.
@@ -49,12 +56,15 @@ to represent the door posts so the player knows where the doorways are located. 
 around the player is shown on the map, including the area around corners before the player reaches them. After the player has traversed
 the entire map, the fog of war map will be identical the regular map except for the addition of the pink blocks representing door posts.
 
+The fog of war map progress is saved when the user leaves a level.
+
 In the dungeon, the map only shows mobs if they are visible. This is an easy way to view the visibility checking of the mobs.
 
 3. Textured Cubes
 ---------------
 Textures have been used for all cubes except the teleportation (grey and white) cubes.
 Only one additional texture was added, it was a darker version of the lava.
+Prof said it was fine too use different textures for the different outdoor levels, so lava was ok for the lowest level.
 
 4. Animated Mesh Movement
 ---------------
@@ -62,8 +72,7 @@ Only one additional texture was added, it was a darker version of the lava.
 One mesh is placed inside each room in the dungeon level. The type of mesh is randonly selected.
 Meshes randomly move around the room they are placed inside. They do not leave the room and they do not
 collide with any of the cubes inside of the room. Their simple ai just picks a direction of movement, moves
-that direction and then randomly picks another direction and then repeats. The have collision detection,
-although this means that sometimes they get stuck between the random blocks.
+that direction until a collision and then randomly picks another direction and then repeats.
 
 5. Visibility of Objects
 ---------------
