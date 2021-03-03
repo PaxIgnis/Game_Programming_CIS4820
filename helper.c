@@ -1398,28 +1398,31 @@ void createDungeonLevel(level* currentLevel, int direction) {
 
     // place player in random room
     int room = rand() % 9;
-    setViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
-    handleGravityCollision();
-    setOldViewPosition(-(startingPoints[room][0] + 2), -26, -(startingPoints[room][1] + 2));
-    setViewOrientation(0, 135, 0);
+    x = (rand() % (roomSizes[room][0] + startingPoints[room][0] - 4 - (startingPoints[room][0] + 2) + 1)) + startingPoints[room][0] + 2;
+    z = (rand() % (roomSizes[room][1] + startingPoints[room][1] - 2 - (startingPoints[room][1] + 2) + 1)) + startingPoints[room][1] + 2;
 
     // clears cubes from around player spawn
-    for (i = startingPoints[room][0]; i < startingPoints[room][0] + 6; i++) {
-        for (j = startingPoints[room][1]; j < startingPoints[room][1] + 6; j++) {
+    for (i = x - 1; i < x + 4; i++) {
+        for (j = z - 1; j < z + 4; j++) {
             if (world[i][26][j] == 47) {
                 world[i][26][j] == 0;
             }
         }
     }
 
+    setViewPosition(-x, -26, -z);
+    handleGravityCollision();
+    setOldViewPosition(-x, -26, -z);
+    setViewOrientation(0, 135, 0);
+
     // sets teleport block(s)
     if (direction > 0) {
-        world[startingPoints[room][0] + 4][26][startingPoints[room][1] + 2] = 5;
+        world[x + 2][26][z] = 5;
     } else if (direction < 0) {
-        world[startingPoints[room][0] + 2][26][startingPoints[room][1] + 4] = 21;
+        world[x + 2][26][z] = 21;
     } else {
-        world[startingPoints[room][0] + 4][26][startingPoints[room][1] + 2] = 5;
-        world[startingPoints[room][0] + 2][26][startingPoints[room][1] + 4] = 21;
+        world[x + 2][26][z] = 5;
+        world[x + 2][26][z + 1] = 21;
     }
 
     // create and places Meshes
