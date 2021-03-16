@@ -126,10 +126,11 @@ void collisionResponse() {
 
    /* your code for collisions goes here */
    if (!testWorld) {
-      handleCollision();
+      handleCollision(currentLevel);
       currentLevel = teleport(currentLevel);
       if (currentLevel->worldType == DUNGEON) {
-         meshVisibilityDetection();
+         countUserTurn(currentLevel);
+         meshVisibilityDetection(currentLevel);
       }
       updateFog(currentLevel);
    }
@@ -327,7 +328,7 @@ void update() {
          animateClouds();
          animateLava();
       } else {
-         animateMesh(currentLevel);
+         // animateMesh(currentLevel);
       }
    }
 }

@@ -1307,7 +1307,7 @@ void motion(int x, int y) {
 /* responds to mouse movement when a button is not pressed */
 void passivemotion(int x, int y) {
    if (currentLevel != NULL && currentLevel->worldType == DUNGEON && testWorld == 0) {
-      meshVisibilityDetection();
+      meshVisibilityDetection(currentLevel);
    }
    mvx += (float)y - oldy;
    mvy += (float)x - oldx;

@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <sys/time.h> 
 
@@ -44,6 +45,295 @@ extern int skySize;
 extern float mvx;
 extern float mvy;
 
+/*
+ * FSA for Plant States
+ * 
+ * currentState |  WAITING  |  FIGHTING  |
+ * event        |
+ * NOTADJACENT  |  WAITING  |  WAITING   |
+ * ADJACENT     |  FIGHTING |  FIGHTING  |
+ * 
+ * First index is event, second is current state
+ * 
+ */
+int plantStates[2][3] = {WAITING, WAITING, FIGHTING, FIGHTING};
+
+/*
+ * FSA for RandomSearch States
+ * 
+ * currentState |  SEARCHING  |  FOLLOWING  |
+ * event        |
+ * VISIBLE      |  FOLLOWING  |  FOLLOWING  |
+ * NOTVISIBLE   |  SEARCHING  |  FOLLOWING  |
+ * 
+ * First index is event, second is current state
+ * 
+ */
+int randomSearchStates[2][3] = {FOLLOWING, FOLLOWING, SEARCHING, FOLLOWING};
+
+/*
+ * FSA for Responsive States
+ * 
+ * currentState |  WAITING    |  FOLLOWING  |
+ * event        |
+ * INROOM       |  FOLLOWING  |  FOLLOWING  |
+ * NOTINROOM    |  WAITING    |  FOLLOWING  |
+ * 
+ * First index is event, second is current state
+ * 
+ */
+int responsiveStates[2][3] = {FOLLOWING, FOLLOWING, WAITING, FOLLOWING};
+
+/*
+ * Function: attackMesh
+ * -------------------
+ *
+ * Handles the processing for the player to attack a mesh.
+ * Assumes that the player and mesh are adjacent.
+ * 
+ */
+void attackMesh(level* currentLevel, int meshId) {
+    int meshType = getMeshNumber(meshId);
+    char meshTypeString[10] = "Mesh";
+    if (meshType == BAT) {
+        strcpy(meshTypeString, "Bat");
+    } else if (meshType == FISH) {
+        strcpy(meshTypeString, "Fish");
+    } else if (meshType == CACTUS) {
+        strcpy(meshTypeString, "Cactus");
+    }
+    if (rand() % 2 == 1) {
+        // Miss
+        switch (rand() % 4) {
+            case 0:
+                printf("You swung at the %s, but missed...\n", meshTypeString);
+                break;
+            case 1:
+                printf("You attacked the %s, but the %s successfully dodged, resulting in a miss.\n", meshTypeString, meshTypeString);
+                break;
+            case 2:
+                printf("You missed your first shot on the %s, a poor start to a fight.\n", meshTypeString);
+                break;
+            case 3:
+                printf("You tried to hit the %s, but your aim was way off and you missed.\n", meshTypeString);
+                break;
+        }
+    } else {
+        // Hit
+        switch (rand() % 4) {
+            case 0:
+                printf("You attacked the %s and successfully landed a shot!\n", meshTypeString);
+                break;
+            case 1:
+                printf("You defeated the %s with a single hit.\n", meshTypeString);
+                break;
+            case 2:
+                printf("You struck the %s down.\n", meshTypeString);
+                break;
+            case 3:
+                printf("You vanquished the %s with a single mighty blow!\n", meshTypeString);
+                break;
+        }
+        currentLevel->meshCurrentState[meshId] = INACTIVE;
+        hideMesh(meshId);
+    }
+    // meshes get turn after player attacks
+    runMeshTurn(currentLevel, NOACTION, 0);
+}
+
+
+/*
+ * Function: attackPlayer
+ * -------------------
+ *
+ * Handles the processing for a mesh to attack the player.
+ * Assumes that the player and mesh are adjacent.
+ * 
+ */
+void attackPlayer(int meshId) {
+    int meshType = getMeshNumber(meshId);
+    char meshTypeString[10] = "Mesh";
+    if (meshType == BAT) {
+        strcpy(meshTypeString, "Bat");
+    } else if (meshType == FISH) {
+        strcpy(meshTypeString, "Fish");
+    } else if (meshType == CACTUS) {
+        strcpy(meshTypeString, "Cactus");
+    }
+    if (rand() % 2 == 1) {
+        // Miss
+        switch (rand() % 4) {
+            case 0:
+                printf("The %s attacked, but failed to land a shot on the player.\n", meshTypeString);
+                break;
+            case 1:
+                printf("The %s attacked, but the player successfully dodged, resulting in a miss.\n", meshTypeString);
+                break;
+            case 2:
+                printf("The %s tried to hit the player but missed.\n", meshTypeString);
+                break;
+            case 3:
+                printf("The %s bravely tried to land a shot on the player, but missed.\n", meshTypeString);
+                break;
+        }
+    } else {
+        // Hit
+        switch (rand() % 4) {
+            case 0:
+                printf("The %s attacked, and successfully landed a shot on the player.\n", meshTypeString);
+                break;
+            case 1:
+                printf("The %s attacked, delivering a powerful blow to the player.\n", meshTypeString);
+                break;
+            case 2:
+                printf("The %s lashed out and struck the player, shouting \"Take That!\".\n", meshTypeString);
+                break;
+            case 3:
+                printf("The powerful %s struck the player with a devastating blow that could be heard throughout the dungeon.\n", meshTypeString);
+                break;
+        }
+    }
+}
+
+
+/*
+ * Function: checkIfAdjacent(int meshId)
+ * -------------------
+ *
+ * Checks if a mesh and the user are on adjacent cubes
+ *
+ */
+bool checkIfAdjacent(int meshId) {
+    float x, y, z, meshX, meshY, meshZ;
+    getViewPosition(&x, &y, &z);
+    getMeshLocation(meshId, &meshX, &meshY, &meshZ);
+
+    meshX = meshX - 0.5;
+    meshZ = meshZ - 0.5;
+    // printf("x: %f, z: %f meshx: %f meshZ: %f\n", x, z, meshX, meshZ);
+    if ((abs(floor(meshX) - floor(-x)) == 0 && abs(floor(meshZ) - floor(-z)) == 1) ||
+        (abs(floor(meshX) - floor(-x)) == 1 && abs(floor(meshZ) - floor(-z)) == 0) ||
+        (abs(floor(meshX) - floor(-x)) == 1 && abs(floor(meshZ) - floor(-z)) == 1)) {
+        return true;
+    }
+    return false;
+}
+
+/*
+ * Function: runPlantFSA
+ * -------------------
+ *
+ * Handles the processing for the plant (cactus) FSA
+ *
+ */
+void runPlantFSA(level* currentLevel, int meshId) {
+    int event;
+    int state;
+    if (checkIfAdjacent(meshId) == true) {
+        event = ADJACENT;
+    } else {
+        event = NOTADJACENT;
+    }
+    state = plantStates[event][currentLevel->meshCurrentState[meshId]];
+
+    if (state == WAITING) {
+        return;
+    } else if (state == FIGHTING) {
+        attackPlayer(meshId);
+    }
+}
+
+
+/*
+ * Function: runRandomSearchFSA
+ * -------------------
+ *
+ * Handles the processing for the random search (bat) FSA
+ *
+ */
+void runRandomSearchFSA(level* currentLevel) {
+    
+}
+
+
+/*
+ * Function: runResponsiveFSA
+ * -------------------
+ *
+ * Handles the processing for the responsive (fish) FSA
+ *
+ */
+void runResponsiveFSA(level* currentLevel) {
+    
+}
+
+
+/*
+ * Function: runMeshTurn
+ * -------------------
+ *
+ * Called when user moves and changes cubes.
+ * Process a single turn for each active mesh.
+ * if action is an attack type then the mesh will run a turn first (if
+ * the user moved in diagonal direction) and then will run the user attack
+ * sequence.
+ *
+ */
+void runMeshTurn(level* currentLevel, int action, int meshId) {
+
+
+    // run single mesh, then attack
+    if (action == ATTACK || action == ATTACKDIAGONAL) {
+        // if user moved diagonal they get a turn first
+        if (action == ATTACKDIAGONAL) {
+            if (getMeshNumber(meshId) == FISH && currentLevel->meshCurrentState[meshId] != INACTIVE) {
+
+            } else if (getMeshNumber(meshId) == BAT && currentLevel->meshCurrentState[meshId] != INACTIVE) {
+
+            } else if (getMeshNumber(meshId) == CACTUS && currentLevel->meshCurrentState[meshId] != INACTIVE) {
+                runPlantFSA(currentLevel, meshId);
+            }
+        }
+        attackMesh(currentLevel, meshId);
+    } else {
+        // animateMesh(currentLevel);
+        for (int i = 0; i < MESHCOUNT; i++) {
+            if (getMeshNumber(i) == FISH && currentLevel->meshCurrentState[i] != INACTIVE) {
+
+            } else if (getMeshNumber(i) == BAT && currentLevel->meshCurrentState[i] != INACTIVE) {
+
+            } else if (getMeshNumber(i) == CACTUS && currentLevel->meshCurrentState[i] != INACTIVE) {
+                runPlantFSA(currentLevel, i);
+            }
+        }
+    }
+}
+
+
+/*
+ * Function: countUserTurn
+ * -------------------
+ *
+ * Called when user moves. Checks if user moves outside of the cube
+ * boundary, and if so measures how many spaces were moved.
+ *
+ */
+void countUserTurn(level* currentLevel) {
+    float x, y, z, newX, newY, newZ;
+
+    getViewPosition(&newX, &newY, &newZ);
+    getOldViewPosition(&x, &y, &z); 
+    if (floor(x) == floor(newX) && floor(z) == floor(newZ)) { // no turn
+        // printf("no turn\n");
+        //runMeshTurn(currentLevel);
+    } else if ((floor(x) == floor(newX) && floor(z) != floor(newZ)) || (floor(x) != floor(newX) && floor(z) == floor(newZ))) { // 1 turn
+        runMeshTurn(currentLevel, NOACTION, 0);
+    } else if (floor(x) != floor(newX) && floor(z) != floor(newZ)) { // diagonal movement (2 turns)
+        runMeshTurn(currentLevel, NOACTION, 0);
+        runMeshTurn(currentLevel, NOACTION, 0);
+    }
+}
+
 
 /*
  * Function: animateLava
@@ -74,6 +364,7 @@ void animateLava() {
         gettimeofday(&t, NULL);
     }
 }
+
 
 /*
  * Function: animateClouds
@@ -126,24 +417,24 @@ void animateMesh(level* currentLevel) {
     float x, y, z, xrot, yrot, zrot;
     static struct timeval t, t1;
     static int i;
-    double speed = .05;
+    double speed = 1.0;
 
-    static int initialized;
-    if (initialized == 0) {
-        initialized = 1;
-        gettimeofday(&t, NULL);
-    }
-    gettimeofday(&t1, NULL);
+    // static int initialized;
+    // if (initialized == 0) {
+    //     initialized = 1;
+    //     gettimeofday(&t, NULL);
+    // }
+    // gettimeofday(&t1, NULL);
 
-    double elapsedTime = (t1.tv_sec - t.tv_sec) * 1000.0; // sec to ms
-    elapsedTime += (t1.tv_usec - t.tv_usec) / 1000.0; // us to ms
+    // double elapsedTime = (t1.tv_sec - t.tv_sec) * 1000.0; // sec to ms
+    // elapsedTime += (t1.tv_usec - t.tv_usec) / 1000.0; // us to ms
     // update meshes every 50 ms
-    if (elapsedTime > 50) {
-        if (elapsedTime > 90) {
-            speed = ((int)elapsedTime / 50) * .05;
-        } else {
-            speed = .05;
-        }
+    // if (elapsedTime > 50) {
+    //     if (elapsedTime > 90) {
+    //         speed = ((int)elapsedTime / 50) * .05;
+    //     } else {
+    //         speed = .05;
+    //     }
         for (int i = 0; i < 9; i++) {
             int meshType = getMeshNumber(i);
             if (isMeshVisible(i) == 1) {
@@ -223,8 +514,8 @@ void animateMesh(level* currentLevel) {
             }
         }
         gettimeofday(&t, NULL);
-    }
-    meshVisibilityDetection();
+    // }
+    meshVisibilityDetection(currentLevel);
 }
 
 
@@ -676,10 +967,10 @@ void drawFogMap(level* currentLevel) {
 
 
 /*
- * Function: drawFogMap(level *currentLevel)
+ * Function: updateFog(level *currentLevel)
  * -------------------
  *
- * Draws the fog of war 2D map
+ * Updates the fog of war 2D map variables
  *
  */
 void updateFog(level* currentLevel) {
@@ -805,7 +1096,7 @@ float getDistanceBetween(float x1, float y1, float x2, float y2) {
  *
  *
  */
-void meshVisibilityDetection() {
+void meshVisibilityDetection(level* currentLevel) {
     float x, y, z, curx, cury, curz, maxDist;
 
     maxDist = 35;
@@ -816,7 +1107,7 @@ void meshVisibilityDetection() {
     for (int i = 0; i < 9; i++) {
         getMeshLocation(i, &x, &y, &z);
         if (cubeInFrustum(x + 1, y, z, 1.5) && getDistanceBetween(x, z, -curx, -curz) < maxDist) {
-            if (isMeshVisible(i) == 0) {
+            if (isMeshVisible(i) == 0 && currentLevel->meshCurrentState[i] != INACTIVE) {
                 switch (getMeshNumber(i)) {
                 case 0:
                     printf("Cow mesh #%d is visible.\n", i + 1);
@@ -1439,13 +1730,25 @@ void createDungeonLevel(level* currentLevel, int direction) {
         } while (world[x][26][z] != 0);
 
         // pick random mesh
-        int type = (rand() % 4);
+        // int type = (rand() % 4);
+        int type = CACTUS;
+
         //draw mesh
         // mesh id matches which room they are placed in (i.e. mesh 1 is in room 1)
         setMeshID(i, type, x + 0.5, type >= 2 ? 26 : y, z + 0.5);
         setRotateMesh(i, 0.0, 0, 0.0);
         setScaleMesh(i, 0.5);
         hideMesh(i);
+        if (type == CACTUS) {
+           currentLevel->meshCurrentState[i] = WAITING; 
+        } else if (type == BAT) {
+           currentLevel->meshCurrentState[i] = SEARCHING; 
+        } else if (type == FISH) {
+           currentLevel->meshCurrentState[i] = WAITING; 
+        } else {
+            currentLevel->meshCurrentState[i] = INACTIVE;
+        }
+        
 
         // room data to struct
         currentLevel->roomSizes[i][0] = roomSizes[i][0];
@@ -1568,10 +1871,11 @@ void handleGravityCollision() {
  * Speed is reduced when sliding to give the walls a 'sticky' feeling.
  *
  */
-void handleCollision() {
+void handleCollision(level* currentLevel) {
     float x, y, z, nextx, nexty, nextz;
     float xx, yy, zz;
     float alp1, alp2, alp3, a2, a3, u, v, RHS1, RHS2, newx, newz;
+    float meshX, meshY, meshZ;
 
     getViewPosition(&x, &y, &z);
     getOldViewPosition(&xx, &yy, &zz);
@@ -1588,6 +1892,36 @@ void handleCollision() {
     float x2Array[4] = { x,x,xx,xx };
     float alp1Array[4] = { 45.0,22.5,78.75,67.5 };
     float alp2Array[4] = { 67.5,78.75,22.5,45.0 };
+    // printf("movex: %f, z: %f\n", x, z);
+    if (currentLevel->worldType == DUNGEON) {
+        // check mesh colision
+        for (int i = 0; i < MESHCOUNT; i++) {
+            getMeshLocation(i, &meshX, &meshY, &meshZ);
+            meshX = meshX - 0.5;
+            meshZ = meshZ - 0.5;
+            if (floor(x) == floor(meshX) && floor(z) == floor(meshZ) && currentLevel->meshCurrentState[i] != INACTIVE) {
+                // mesh will be attacked
+                if (floor(x) != floor(xx) && floor(z) != floor(zz)) { // diagonal movement (2 turns)
+                    setViewPosition(-xx, -yy, -zz);
+                    runMeshTurn(currentLevel, ATTACKDIAGONAL, i);
+                } else {
+                    setViewPosition(-xx, -yy, -zz);
+                    runMeshTurn(currentLevel, ATTACK, i);
+                }
+                // world[(int)floor(xx)][25][(int)floor(zz)] = 1;
+                return;
+            }
+        }
+        // for (int i = 0; i < WORLDX; i++) {
+        //     for (int j = 0; j < WORLDZ; j++) {
+        //         if (world[i][25][j] == 1 || world[i][25][j] == 4) {
+        //             world[i][25][j] = 3;
+        //         }
+        //     }
+        // }
+        // world[(int)floor(x)][25][(int)floor(z)] = 4;
+    }
+    
     // check 5 directions if obstruction is ahead (45 to 135 degree in direction of movement, every 22.5 degrees)
     for (int i = 0; i < 5; i++) {
 
@@ -1855,6 +2189,7 @@ void handleCollision() {
             if (world[(int)floor(x)][(int)floor(y)][(int)floor(z)] == 0) {
                 setViewPosition(-x, -y, -z);
             } else {
+                // Don't move
                 setViewPosition(-xx, -yy, -zz);
             }
             break;
