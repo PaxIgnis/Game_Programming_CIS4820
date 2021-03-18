@@ -1,5 +1,6 @@
 #include <stdbool.h>
 
+
 // Used for world generation
 #define WALL 0
 #define CORRIDORWALL 1
@@ -56,7 +57,46 @@ typedef struct level {
     int roomSizes[9][2]; // size includes outside wall
     // Used to keep track of Meshes AI
     int meshCurrentState[MESHCOUNT];
+    // used to keep track of destination for searching meshes
+    // index 0 is x coordinate and index 1 is z coordinate
+    int meshSearchDest[MESHCOUNT][2];
 } level;
+
+/**
+ * List of nodes, where x and y represent a position in the 2d
+ * array representing the dungeon level
+ * 
+ */
+typedef struct node {
+    int x;
+    int y;
+    struct node *next;
+    struct node *prev;
+} Node;
+
+/**
+ * Used for the return type for the pathfinding bfs.
+ * returns a boolean representing the success of a path,
+ * and x,y coordinates for the next cube in the path if one
+ * was found.
+ * 
+ */ 
+typedef struct path {
+    int x;
+    int y;
+    bool pathFound;
+} Path;
+
+
+/**
+ * Queue used for the bfs
+ *  
+ */
+typedef struct queue {
+    Node *head;
+    Node *tail;
+    int length;
+} Queue;
 
 
 void animateClouds();
@@ -64,7 +104,8 @@ void animateLava();
 void animateMesh(level* currentLevel);
 void attackMesh(level* currentLevel, int meshId);
 void attackPlayer(int meshId);
-bool checkIfAdjacent(int meshId);
+bool checkIfAdjacentUser(int meshId);
+bool checkIfEmpty(level* currentLevel, int x, int y, int z);
 void clearWorld();
 void countUserTurn(level* currentLevel);
 void createDungeonLevel(level* currentLevel, int direction);
@@ -80,7 +121,7 @@ level* initNewLevel(level* currentPos, int direction);
 void meshVisibilityDetection(level* currentLevel);
 void runMeshTurn(level* currentLevel, int action, int meshId);
 void runPlantFSA(level* currentLevel, int meshId);
-void runRandomSearchFSA(level* currentLevel);
+void runRandomSearchFSA(level* currentLevel, int meshID);
 void runResponsiveFSA(level* currentLevel);
 void countUserTurn(level* currentLevel);
 void saveLevel(level* currentLevel);
@@ -95,3 +136,13 @@ extern void draw2Dbox(int, int, int, int);
 extern void draw2Dtriangle(int, int, int, int, int, int);
 extern void set2Dcolour(float[]);
 extern void draw2Dquad(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4);
+
+
+bool queueIsEmpty(Queue * queue);
+void queuePop(Queue* queue);
+void queuePush(Queue* queue, Node* node);
+Queue* newQueue(Queue* queue);
+Node* newNode(int x, int y);
+void freeQueue(Queue* queue);
+bool nodesEqual(Node* first, Node* second);
+Path bfs(int startX, int startY, int endX, int endY, level* currentLevel, Path nextStep);

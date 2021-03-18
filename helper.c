@@ -47,42 +47,42 @@ extern float mvy;
 
 /*
  * FSA for Plant States
- * 
+ *
  * currentState |  WAITING  |  FIGHTING  |
  * event        |
  * NOTADJACENT  |  WAITING  |  WAITING   |
  * ADJACENT     |  FIGHTING |  FIGHTING  |
- * 
+ *
  * First index is event, second is current state
- * 
+ *
  */
-int plantStates[2][3] = {WAITING, WAITING, FIGHTING, FIGHTING};
+int plantStates[2][2] = { WAITING, WAITING, FIGHTING, FIGHTING };
 
 /*
  * FSA for RandomSearch States
- * 
+ *
  * currentState |  SEARCHING  |  FOLLOWING  |
  * event        |
  * VISIBLE      |  FOLLOWING  |  FOLLOWING  |
  * NOTVISIBLE   |  SEARCHING  |  FOLLOWING  |
- * 
+ *
  * First index is event, second is current state
- * 
+ *
  */
-int randomSearchStates[2][3] = {FOLLOWING, FOLLOWING, SEARCHING, FOLLOWING};
+int randomSearchStates[2][2] = { FOLLOWING, FOLLOWING, SEARCHING, FOLLOWING };
 
 /*
  * FSA for Responsive States
- * 
+ *
  * currentState |  WAITING    |  FOLLOWING  |
  * event        |
  * INROOM       |  FOLLOWING  |  FOLLOWING  |
  * NOTINROOM    |  WAITING    |  FOLLOWING  |
- * 
+ *
  * First index is event, second is current state
- * 
+ *
  */
-int responsiveStates[2][3] = {FOLLOWING, FOLLOWING, WAITING, FOLLOWING};
+int responsiveStates[2][2] = { FOLLOWING, FOLLOWING, WAITING, FOLLOWING };
 
 /*
  * Function: attackMesh
@@ -90,7 +90,7 @@ int responsiveStates[2][3] = {FOLLOWING, FOLLOWING, WAITING, FOLLOWING};
  *
  * Handles the processing for the player to attack a mesh.
  * Assumes that the player and mesh are adjacent.
- * 
+ *
  */
 void attackMesh(level* currentLevel, int meshId) {
     int meshType = getMeshNumber(meshId);
@@ -105,34 +105,34 @@ void attackMesh(level* currentLevel, int meshId) {
     if (rand() % 2 == 1) {
         // Miss
         switch (rand() % 4) {
-            case 0:
-                printf("You swung at the %s, but missed...\n", meshTypeString);
-                break;
-            case 1:
-                printf("You attacked the %s, but the %s successfully dodged, resulting in a miss.\n", meshTypeString, meshTypeString);
-                break;
-            case 2:
-                printf("You missed your first shot on the %s, a poor start to a fight.\n", meshTypeString);
-                break;
-            case 3:
-                printf("You tried to hit the %s, but your aim was way off and you missed.\n", meshTypeString);
-                break;
+        case 0:
+            printf("You swung at the %s, but missed...\n", meshTypeString);
+            break;
+        case 1:
+            printf("You attacked the %s, but the %s successfully dodged, resulting in a miss.\n", meshTypeString, meshTypeString);
+            break;
+        case 2:
+            printf("You missed your first shot on the %s, a poor start to a fight.\n", meshTypeString);
+            break;
+        case 3:
+            printf("You tried to hit the %s, but your aim was way off and you missed.\n", meshTypeString);
+            break;
         }
     } else {
         // Hit
         switch (rand() % 4) {
-            case 0:
-                printf("You attacked the %s and successfully landed a shot!\n", meshTypeString);
-                break;
-            case 1:
-                printf("You defeated the %s with a single hit.\n", meshTypeString);
-                break;
-            case 2:
-                printf("You struck the %s down.\n", meshTypeString);
-                break;
-            case 3:
-                printf("You vanquished the %s with a single mighty blow!\n", meshTypeString);
-                break;
+        case 0:
+            printf("You attacked the %s and successfully landed a shot!\n", meshTypeString);
+            break;
+        case 1:
+            printf("You defeated the %s with a single hit.\n", meshTypeString);
+            break;
+        case 2:
+            printf("You struck the %s down.\n", meshTypeString);
+            break;
+        case 3:
+            printf("You vanquished the %s with a single mighty blow!\n", meshTypeString);
+            break;
         }
         currentLevel->meshCurrentState[meshId] = INACTIVE;
         hideMesh(meshId);
@@ -148,7 +148,7 @@ void attackMesh(level* currentLevel, int meshId) {
  *
  * Handles the processing for a mesh to attack the player.
  * Assumes that the player and mesh are adjacent.
- * 
+ *
  */
 void attackPlayer(int meshId) {
     int meshType = getMeshNumber(meshId);
@@ -163,54 +163,76 @@ void attackPlayer(int meshId) {
     if (rand() % 2 == 1) {
         // Miss
         switch (rand() % 4) {
-            case 0:
-                printf("The %s attacked, but failed to land a shot on the player.\n", meshTypeString);
-                break;
-            case 1:
-                printf("The %s attacked, but the player successfully dodged, resulting in a miss.\n", meshTypeString);
-                break;
-            case 2:
-                printf("The %s tried to hit the player but missed.\n", meshTypeString);
-                break;
-            case 3:
-                printf("The %s bravely tried to land a shot on the player, but missed.\n", meshTypeString);
-                break;
+        case 0:
+            printf("The %s attacked, but failed to land a shot on the player.\n", meshTypeString);
+            break;
+        case 1:
+            printf("The %s attacked, but the player successfully dodged, resulting in a miss.\n", meshTypeString);
+            break;
+        case 2:
+            printf("The %s tried to hit the player but missed.\n", meshTypeString);
+            break;
+        case 3:
+            printf("The %s bravely tried to land a shot on the player, but missed.\n", meshTypeString);
+            break;
         }
     } else {
         // Hit
         switch (rand() % 4) {
-            case 0:
-                printf("The %s attacked, and successfully landed a shot on the player.\n", meshTypeString);
-                break;
-            case 1:
-                printf("The %s attacked, delivering a powerful blow to the player.\n", meshTypeString);
-                break;
-            case 2:
-                printf("The %s lashed out and struck the player, shouting \"Take That!\".\n", meshTypeString);
-                break;
-            case 3:
-                printf("The powerful %s struck the player with a devastating blow that could be heard throughout the dungeon.\n", meshTypeString);
-                break;
+        case 0:
+            printf("The %s attacked, and successfully landed a shot on the player.\n", meshTypeString);
+            break;
+        case 1:
+            printf("The %s attacked, delivering a powerful blow to the player.\n", meshTypeString);
+            break;
+        case 2:
+            printf("The %s lashed out and struck the player, shouting \"Take That!\".\n", meshTypeString);
+            break;
+        case 3:
+            printf("The powerful %s struck the player with a devastating blow that could be heard throughout the dungeon.\n", meshTypeString);
+            break;
         }
     }
 }
 
 
 /*
- * Function: checkIfAdjacent(int meshId)
+ * Function: checkIfAdjacentMesh(int meshId, int x, int z)
+ * -------------------
+ *
+ * Checks if a mesh is adjacent to a location
+ *
+ */
+bool checkIfAdjacentMesh(int meshId, int x, int z) {
+    float meshX, meshY, meshZ;
+    getMeshLocation(meshId, &meshX, &meshY, &meshZ);
+
+    meshX = meshX - 0.5;
+    meshZ = meshZ - 0.5;
+
+    if ((abs(floor(meshX) - floor(x)) == 0 && abs(floor(meshZ) - floor(z)) == 1) ||
+        (abs(floor(meshX) - floor(x)) == 1 && abs(floor(meshZ) - floor(z)) == 0) ||
+        (abs(floor(meshX) - floor(x)) == 1 && abs(floor(meshZ) - floor(z)) == 1)) {
+        return true;
+    }
+    return false;
+}
+
+
+/*
+ * Function: checkIfAdjacentUser(int meshId)
  * -------------------
  *
  * Checks if a mesh and the user are on adjacent cubes
  *
  */
-bool checkIfAdjacent(int meshId) {
+bool checkIfAdjacentUser(int meshId) {
     float x, y, z, meshX, meshY, meshZ;
     getViewPosition(&x, &y, &z);
     getMeshLocation(meshId, &meshX, &meshY, &meshZ);
 
     meshX = meshX - 0.5;
     meshZ = meshZ - 0.5;
-    // printf("x: %f, z: %f meshx: %f meshZ: %f\n", x, z, meshX, meshZ);
     if ((abs(floor(meshX) - floor(-x)) == 0 && abs(floor(meshZ) - floor(-z)) == 1) ||
         (abs(floor(meshX) - floor(-x)) == 1 && abs(floor(meshZ) - floor(-z)) == 0) ||
         (abs(floor(meshX) - floor(-x)) == 1 && abs(floor(meshZ) - floor(-z)) == 1)) {
@@ -218,6 +240,59 @@ bool checkIfAdjacent(int meshId) {
     }
     return false;
 }
+
+/*
+ * Function: checkIfEmpty(level* currentLevel, int x, int z)
+ * -------------------
+ *
+ * Checks if cube is free to move to
+ *
+ */
+bool checkIfEmpty(level* currentLevel, int x, int y, int z) {
+    float userX, userY, userZ, meshX, meshY, meshZ;
+    // return false if there is a cube there
+    if (world[x][y][z] != 0) {
+        return false;
+    }
+    getViewPosition(&userX, &userY, &userZ);
+    // return false if the player is there
+    if (floor(x) == floor(userX) && floor(y) == floor(userY) && floor(z) == floor(userZ)) {
+        return false;
+    }
+    // return false if a mesh is there
+    for (int i = 0; i < MESHCOUNT; i++) {
+        getMeshLocation(i, &meshX, &meshY, &meshZ);
+        meshX = meshX - 0.5;
+        meshZ = meshZ - 0.5;
+        if (floor(x) == floor(meshX) && floor(y) == floor(meshY) && floor(z) == floor(meshZ) && currentLevel->meshCurrentState[i] != INACTIVE) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+/**
+ * Function: pickDestination(level* currentLevel, int meshID)
+ * -------------------
+ *
+ * pick a location in one of the rooms and make that the next destination for the
+ * selected meshID (sets the coordinates into the currentLevel object)
+ *
+ */
+void pickDestination(level* currentLevel, int meshID) {
+    int x, z;
+    do {
+        int room = rand() % 9;
+        x = (rand() % (currentLevel->roomSizes[room][0] + currentLevel->startingPoints[room][0] - 4 -
+            (currentLevel->startingPoints[room][0] + 2) + 1)) + currentLevel->startingPoints[room][0] + 2;
+        z = (rand() % (currentLevel->roomSizes[room][1] + currentLevel->startingPoints[room][1] - 2 -
+            (currentLevel->startingPoints[room][1] + 2) + 1)) + currentLevel->startingPoints[room][1] + 2;
+    } while (!checkIfEmpty(currentLevel, x, 26, z) && !checkIfAdjacentMesh(meshID, x, z));
+    currentLevel->meshSearchDest[meshID][0] = x;
+    currentLevel->meshSearchDest[meshID][1] = z;
+}
+
 
 /*
  * Function: runPlantFSA
@@ -229,7 +304,7 @@ bool checkIfAdjacent(int meshId) {
 void runPlantFSA(level* currentLevel, int meshId) {
     int event;
     int state;
-    if (checkIfAdjacent(meshId) == true) {
+    if (checkIfAdjacentUser(meshId) == true) {
         event = ADJACENT;
     } else {
         event = NOTADJACENT;
@@ -251,8 +326,67 @@ void runPlantFSA(level* currentLevel, int meshId) {
  * Handles the processing for the random search (bat) FSA
  *
  */
-void runRandomSearchFSA(level* currentLevel) {
-    
+void runRandomSearchFSA(level* currentLevel, int meshID) {
+    int event, state;
+    float x, y, z, userX, userY, userZ;
+    Path nextStep;
+    nextStep.pathFound = false;
+
+    if (isMeshVisible(meshID)) {
+        event = VISIBLE;
+    } else {
+        event = NOTVISIBLE;
+    }
+    state = randomSearchStates[event][currentLevel->meshCurrentState[meshID]];
+    currentLevel->meshCurrentState[meshID] = state;
+    // Searching means that the mesh is just selecting a destination, and then going there
+    if (state == SEARCHING) {
+        // if the destination has not yet been selected
+        if (currentLevel->meshSearchDest[meshID][0] == -1) {
+            pickDestination(currentLevel, meshID);
+        }
+        // check if the mesh has made it to the final destination
+        if (checkIfAdjacentMesh(meshID, currentLevel->meshSearchDest[meshID][0], currentLevel->meshSearchDest[meshID][1])) {
+            pickDestination(currentLevel, meshID);
+        }
+        // find a path to the destination
+        while (nextStep.pathFound == false) {
+            getMeshLocation(meshID, &x, &y, &z);
+            x = x - 0.5;
+            z = z - 0.5;
+            int x2 = currentLevel->meshSearchDest[meshID][0];
+            int z2 = currentLevel->meshSearchDest[meshID][1];
+
+            nextStep = bfs(floor(x), floor(z), floor(x2), floor(z2), currentLevel, nextStep);
+            if (nextStep.pathFound == false) {
+                pickDestination(currentLevel, meshID);
+            }
+        }
+        // move mesh single step along path
+        setTranslateMesh(meshID, nextStep.x + 0.5, y, nextStep.y + 0.5);
+    } else if (state == FOLLOWING) {
+        // Following means the mesh is actively following the user
+        // first check if user is adjacent
+        if (checkIfAdjacentUser(meshID)) {
+            attackPlayer(meshID);
+        } else {
+            // find path to user
+            getMeshLocation(meshID, &x, &y, &z);
+            x = x - 0.5;
+            z = z - 0.5;
+            getViewPosition(&userX, &userY, &userZ);
+            nextStep = bfs(floor(x), floor(z), floor(-userX), floor(-userZ), currentLevel, nextStep);
+            // if path exists
+            if (nextStep.pathFound) {
+                // move mesh single step along path
+                setTranslateMesh(meshID, nextStep.x + 0.5, y, nextStep.y + 0.5);
+            } else {
+                // do nothing
+                // TODO: should do something, this case is when user is on a block or
+                //       when no path to the user exists (i.e. blocked off in a room)
+            }
+        }
+    }
 }
 
 
@@ -264,7 +398,7 @@ void runRandomSearchFSA(level* currentLevel) {
  *
  */
 void runResponsiveFSA(level* currentLevel) {
-    
+
 }
 
 
@@ -280,31 +414,21 @@ void runResponsiveFSA(level* currentLevel) {
  *
  */
 void runMeshTurn(level* currentLevel, int action, int meshId) {
-
-
-    // run single mesh, then attack
-    if (action == ATTACK || action == ATTACKDIAGONAL) {
-        // if user moved diagonal they get a turn first
-        if (action == ATTACKDIAGONAL) {
-            if (getMeshNumber(meshId) == FISH && currentLevel->meshCurrentState[meshId] != INACTIVE) {
-
-            } else if (getMeshNumber(meshId) == BAT && currentLevel->meshCurrentState[meshId] != INACTIVE) {
-
-            } else if (getMeshNumber(meshId) == CACTUS && currentLevel->meshCurrentState[meshId] != INACTIVE) {
-                runPlantFSA(currentLevel, meshId);
-            }
-        }
+    if (action == ATTACK) {
         attackMesh(currentLevel, meshId);
     } else {
-        // animateMesh(currentLevel);
+        // each mesh gets a turn
         for (int i = 0; i < MESHCOUNT; i++) {
             if (getMeshNumber(i) == FISH && currentLevel->meshCurrentState[i] != INACTIVE) {
 
             } else if (getMeshNumber(i) == BAT && currentLevel->meshCurrentState[i] != INACTIVE) {
-
+                runRandomSearchFSA(currentLevel, i);
             } else if (getMeshNumber(i) == CACTUS && currentLevel->meshCurrentState[i] != INACTIVE) {
                 runPlantFSA(currentLevel, i);
             }
+        }
+        if (action == ATTACKDIAGONAL && checkIfAdjacentUser(meshId)) {
+            attackMesh(currentLevel, meshId);
         }
     }
 }
@@ -322,10 +446,9 @@ void countUserTurn(level* currentLevel) {
     float x, y, z, newX, newY, newZ;
 
     getViewPosition(&newX, &newY, &newZ);
-    getOldViewPosition(&x, &y, &z); 
+    getOldViewPosition(&x, &y, &z);
     if (floor(x) == floor(newX) && floor(z) == floor(newZ)) { // no turn
-        // printf("no turn\n");
-        //runMeshTurn(currentLevel);
+        return;
     } else if ((floor(x) == floor(newX) && floor(z) != floor(newZ)) || (floor(x) != floor(newX) && floor(z) == floor(newZ))) { // 1 turn
         runMeshTurn(currentLevel, NOACTION, 0);
     } else if (floor(x) != floor(newX) && floor(z) != floor(newZ)) { // diagonal movement (2 turns)
@@ -435,85 +558,85 @@ void animateMesh(level* currentLevel) {
     //     } else {
     //         speed = .05;
     //     }
-        for (int i = 0; i < 9; i++) {
-            int meshType = getMeshNumber(i);
-            if (isMeshVisible(i) == 1) {
-                getMeshLocation(i, &x, &y, &z);
-                x = x - 0.5;
-                z = z - 0.5;
-                getMeshOrientation(i, &xrot, &yrot, &zrot);
-                // cow (0) faces right and all else left on 0 degrees y rot
-                if (meshType == 0) {
-                    yrot = yrot + 270;
-                } else {
-                    yrot = yrot + 90;
-                }
-                if ((int)yrot >= 360) {
-                    yrot = yrot - 360;
-                } else if ((int)yrot < 0) {
-                    yrot = yrot + 360;
-                }
-                // moving in left direction
-                if ((int)yrot == 0) {
-                    if ((int)floor(x) > currentLevel->startingPoints[i][0] + 2 &&
-                        world[(int)floor(x - 1)][26][(int)floor(z)] == 0
-                        ) {
-                        x = x - speed;
-                    } else {
-                        int direction = rand() % 3;
-                        yrot = direction == 1 ? 90 : (direction == 2 ? 180 : 270);
-                        x = floor(x);
-                        z = floor(z);
-                    }
-                } else if ((int)yrot == 90) { // moving up direction
-                    if ((int)floor(z) < (currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] - 1) &&
-                        world[(int)floor(x)][26][(int)floor(z + 1)] == 0
-                        ) {
-                        z = z + speed;
-                    } else {
-                        int direction = rand() % 3;
-                        yrot = direction == 1 ? 0 : (direction == 2 ? 180 : 270);
-                        x = floor(x);
-                        z = floor(z);
-                    }
-                } else if ((int)yrot == 180) { // moving right direction
-                    if ((int)floor(x) < (currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] - 1) &&
-                        world[(int)floor(x + 1)][26][(int)floor(z)] == 0
-                        ) {
-                        x = x + speed;
-                    } else {
-                        int direction = rand() % 3;
-                        yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 270);
-                        x = floor(x);
-                        z = floor(z);
-                    }
-                } else if ((int)yrot == 270) { // moving down direction
-                    if ((int)floor(z) > (currentLevel->startingPoints[i][1] + 2) &&
-                        world[(int)floor(x)][26][(int)floor(z - 1)] == 0
-                        ) {
-                        z = z - speed;
-                    } else {
-                        int direction = rand() % 3;
-                        yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 180);
-                        x = floor(x);
-                        z = floor(z);
-                    }
-                }
-                if (meshType == 0) {
-                    yrot = yrot - 270;
-                } else {
-                    yrot = yrot - 90;
-                }
-                if ((int)yrot >= 360) {
-                    yrot = yrot - 360;
-                } else if ((int)yrot < 0) {
-                    yrot = yrot + 360;
-                }
-                setTranslateMesh(i, x + 0.5, y, z + 0.5);
-                setRotateMesh(i, xrot, yrot, zrot);
+    for (int i = 0; i < 9; i++) {
+        int meshType = getMeshNumber(i);
+        if (isMeshVisible(i) == 1) {
+            getMeshLocation(i, &x, &y, &z);
+            x = x - 0.5;
+            z = z - 0.5;
+            getMeshOrientation(i, &xrot, &yrot, &zrot);
+            // cow (0) faces right and all else left on 0 degrees y rot
+            if (meshType == 0) {
+                yrot = yrot + 270;
+            } else {
+                yrot = yrot + 90;
             }
+            if ((int)yrot >= 360) {
+                yrot = yrot - 360;
+            } else if ((int)yrot < 0) {
+                yrot = yrot + 360;
+            }
+            // moving in left direction
+            if ((int)yrot == 0) {
+                if ((int)floor(x) > currentLevel->startingPoints[i][0] + 2 &&
+                    world[(int)floor(x - 1)][26][(int)floor(z)] == 0
+                    ) {
+                    x = x - speed;
+                } else {
+                    int direction = rand() % 3;
+                    yrot = direction == 1 ? 90 : (direction == 2 ? 180 : 270);
+                    x = floor(x);
+                    z = floor(z);
+                }
+            } else if ((int)yrot == 90) { // moving up direction
+                if ((int)floor(z) < (currentLevel->startingPoints[i][1] + currentLevel->roomSizes[i][1] - 1) &&
+                    world[(int)floor(x)][26][(int)floor(z + 1)] == 0
+                    ) {
+                    z = z + speed;
+                } else {
+                    int direction = rand() % 3;
+                    yrot = direction == 1 ? 0 : (direction == 2 ? 180 : 270);
+                    x = floor(x);
+                    z = floor(z);
+                }
+            } else if ((int)yrot == 180) { // moving right direction
+                if ((int)floor(x) < (currentLevel->startingPoints[i][0] + currentLevel->roomSizes[i][0] - 1) &&
+                    world[(int)floor(x + 1)][26][(int)floor(z)] == 0
+                    ) {
+                    x = x + speed;
+                } else {
+                    int direction = rand() % 3;
+                    yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 270);
+                    x = floor(x);
+                    z = floor(z);
+                }
+            } else if ((int)yrot == 270) { // moving down direction
+                if ((int)floor(z) > (currentLevel->startingPoints[i][1] + 2) &&
+                    world[(int)floor(x)][26][(int)floor(z - 1)] == 0
+                    ) {
+                    z = z - speed;
+                } else {
+                    int direction = rand() % 3;
+                    yrot = direction == 1 ? 0 : (direction == 2 ? 90 : 180);
+                    x = floor(x);
+                    z = floor(z);
+                }
+            }
+            if (meshType == 0) {
+                yrot = yrot - 270;
+            } else {
+                yrot = yrot - 90;
+            }
+            if ((int)yrot >= 360) {
+                yrot = yrot - 360;
+            } else if ((int)yrot < 0) {
+                yrot = yrot + 360;
+            }
+            setTranslateMesh(i, x + 0.5, y, z + 0.5);
+            setRotateMesh(i, xrot, yrot, zrot);
         }
-        gettimeofday(&t, NULL);
+    }
+    gettimeofday(&t, NULL);
     // }
     meshVisibilityDetection(currentLevel);
 }
@@ -675,7 +798,11 @@ void drawMap(level* currentLevel) {
     GLfloat white[] = { 1, 1, 1, .98 };
     GLfloat grey[] = { 0.3, 0.3, 0.3, .98 };
     GLfloat lightGreen[] = { 0.0, 0.7, 0.0, .2 };
+    //meshes
     GLfloat yellow[] = { 0.8, 0.8, 0.1, .98 };
+    GLfloat lightOrange[] = { 0.95, 0.38, 0, .98 };
+    GLfloat darkGreen[] = { 0.11, 0.36, .18, .98 };
+
     GLfloat orange[] = { 0.95, 0.35, 0.01, .98 };
     GLfloat snow[] = { 0.9, 0.9, 0.9, .98 };
     GLfloat brown[] = { 0.25, 0.08, 0.1, .98 };
@@ -731,13 +858,23 @@ void drawMap(level* currentLevel) {
         for (int i = 0; i < 9; i++) {
             glClear(GL_DEPTH_BUFFER_BIT);
             // don't draw mesh if it is hidden
-            if (isMeshVisible(i) == 1) {
+            // if (isMeshVisible(i) == 1) {
+            if (currentLevel->meshCurrentState[i] != INACTIVE) {
                 getMeshLocation(i, &x, &y, &z);
-                set2Dcolour(yellow);
+                int meshType = getMeshNumber(i);
+                if (meshType == CACTUS) {
+                    set2Dcolour(darkGreen);
+                } else if (meshType == FISH) {
+                    set2Dcolour(lightOrange);
+                } else {
+                    set2Dcolour(yellow);
+                }
+
                 draw2Dbox((int)((((z)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
                     (int)((((x)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
                     (int)(((z + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
                     (int)(((x + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
+                // }
             }
         }
     } else if (currentLevel->worldType == OUTDOOR) {
@@ -1148,7 +1285,7 @@ void meshVisibilityDetection(level* currentLevel) {
 
 
 /*
- * Function: teleport(level* currentLevel) 
+ * Function: teleport(level* currentLevel)
  * -------------------
  *
  * Checks if player is on teleport cube
@@ -1730,8 +1867,8 @@ void createDungeonLevel(level* currentLevel, int direction) {
         } while (world[x][26][z] != 0);
 
         // pick random mesh
-        // int type = (rand() % 4);
-        int type = CACTUS;
+        int type = (rand() % 3) + 1;
+        // int type = BAT;
 
         //draw mesh
         // mesh id matches which room they are placed in (i.e. mesh 1 is in room 1)
@@ -1740,15 +1877,17 @@ void createDungeonLevel(level* currentLevel, int direction) {
         setScaleMesh(i, 0.5);
         hideMesh(i);
         if (type == CACTUS) {
-           currentLevel->meshCurrentState[i] = WAITING; 
+            currentLevel->meshCurrentState[i] = WAITING;
         } else if (type == BAT) {
-           currentLevel->meshCurrentState[i] = SEARCHING; 
+            currentLevel->meshCurrentState[i] = SEARCHING;
         } else if (type == FISH) {
-           currentLevel->meshCurrentState[i] = WAITING; 
+            currentLevel->meshCurrentState[i] = WAITING;
         } else {
             currentLevel->meshCurrentState[i] = INACTIVE;
         }
-        
+        currentLevel->meshSearchDest[i][0] = -1;
+        currentLevel->meshSearchDest[i][1] = -1;
+
 
         // room data to struct
         currentLevel->roomSizes[i][0] = roomSizes[i][0];
@@ -1921,7 +2060,7 @@ void handleCollision(level* currentLevel) {
         // }
         // world[(int)floor(x)][25][(int)floor(z)] = 4;
     }
-    
+
     // check 5 directions if obstruction is ahead (45 to 135 degree in direction of movement, every 22.5 degrees)
     for (int i = 0; i < 5; i++) {
 
@@ -2353,4 +2492,258 @@ void extractFrustum() {
     frustum[5][1] /= t;
     frustum[5][2] /= t;
     frustum[5][3] /= t;
+}
+
+
+
+/**
+ * BFS Code
+ */
+
+
+ /**
+  * Function: queueIsEmpty(Queue * queue)
+  * -------------------
+  *
+  * Checks of the queue doesn't have any nodes, or if the queue is null
+  *
+  */
+bool queueIsEmpty(Queue* queue) {
+    if (queue == NULL || queue->head == NULL) {
+        return true;
+    }
+    return false;
+}
+
+
+/**
+ * Function: queuePop(Queue* queue)
+ * -------------------
+ *
+ * pops the head node from the queue, and frees that node.
+ *
+ */
+void queuePop(Queue* queue) {
+    if (queue->head != NULL) {
+        Node* node = queue->head;
+        queue->head = node->next;
+
+        if (queue->head == NULL) {
+            queue->tail = NULL;
+        } else {
+            queue->head->prev = NULL;
+        }
+        free(node);
+        node = NULL;
+        queue->length--;
+    }
+}
+
+
+/**
+ * Function: queuePush(Queue* queue, Node* node)
+ * -------------------
+ *
+ * adds a node the the end of a queue
+ *
+ */
+void queuePush(Queue* queue, Node* node) {
+    if (queue == NULL || node == NULL) {
+        return;
+    }
+    queue->length++;
+    if (queue->tail == NULL) {
+        queue->tail = node;
+        queue->head = node;
+    } else {
+        queue->tail->next = node;
+        node->prev = queue->tail;
+        queue->tail = node;
+    }
+}
+
+
+/**
+ * Function: newQueue(Queue* queue)
+ * -------------------
+ *
+ * initializes a new queue object
+ *
+ */
+Queue* newQueue(Queue* queue) {
+    queue = malloc(sizeof(Queue));
+    queue->head = NULL;
+    queue->tail = NULL;
+    queue->length = 0;
+    return queue;
+}
+
+
+/**
+ * Function: newNode(int x, int y)
+ * -------------------
+ *
+ * allocates memory for a new node, sets
+ * the x and y values and returns the node.
+ *
+ */
+Node* newNode(int x, int y) {
+    Node* node = malloc(sizeof(Node));
+    node->next = NULL;
+    node->prev = NULL;
+    node->x = x;
+    node->y = y;
+    return node;
+}
+
+
+/**
+ * Function: freeQueue(Queue* queue)
+ * -------------------
+ *
+ * free all elements in queue, then frees the queue object
+ *
+ */
+void freeQueue(Queue* queue) {
+    while (!queueIsEmpty(queue)) {
+        queuePop(queue);
+    }
+    free(queue);
+    queue = NULL;
+}
+
+
+/*
+ * Function: nodesEqual(Node* first, Node* second)
+ * -------------------
+ *
+ * checks if two nodes are equal (be testing their x,y coordinates)
+ *
+ */
+bool nodesEqual(Node* first, Node* second) {
+    if ((first->x == second->x) && (first->y == second->y)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+/**
+ * bfs(Node* start, Node* end, level* currentLevel, Path nextStep)
+ * -------------------
+ *
+ * Implements a breadth first search to find a path between two points.
+ * By keeping track of parent nodes, the shortest path is saved.
+ *
+ * start x and y are the starting location (x,y coordinates)
+ * end x and y are the ending location (x,y coordinates)
+ * currentLevel is the object holding all of the data for the level.
+ * nextStep is a struct which holds the x,y coordinates for the next step
+ * in the path, and a boolean which represents the success of finding a path
+ *
+ * nextStep is returned
+ */
+Path bfs(int startX, int startY, int endX, int endY, level* currentLevel, Path nextStep) {
+    Node* followPath[WORLDX][WORLDZ] = { {NULL} };
+    int visited[WORLDX][WORLDZ] = { 0 };
+    int worldPath[WORLDX][WORLDZ] = { 0 };
+    Queue* queue = newQueue(queue);
+    Queue* path;
+    path = newQueue(path);
+    // build 2d map
+    for (int i = 0; i < WORLDX; i++) {
+        for (int j = 0; j < WORLDZ; j++) {
+            if (!checkIfEmpty(currentLevel, i, 26, j)) {
+                worldPath[i][j] = 1;
+            }
+        }
+    }
+    // starting and ending objects holding those coordinates
+    Node* start = newNode(startX, startY);
+    Node* end = newNode(endX, endY);
+
+    Node* currentNode = newNode(start->x, start->y);
+
+    int i, j;
+    bool endReached = false;
+
+    visited[start->x][start->y] = 1;
+    queuePush(queue, currentNode);
+    // start bfs
+    while (!queueIsEmpty(queue)) {
+        currentNode = queue->head;
+        // used to keep track of parents for the path finding
+        Node* currentNodeAsParent = newNode(currentNode->x, currentNode->y);
+        queuePush(path, currentNodeAsParent);
+
+        // find all adjacent cubes
+        for (i = currentNode->x - 1; i <= currentNode->x + 1; i++) {
+            for (j = currentNode->y - 1; j <= currentNode->y + 1; j++) {
+                // check if in bounds
+                if ((i < 0) || (j < 0) || (i >= WORLDX) || (j >= WORLDZ)) {
+                    continue;
+                }
+
+                // check if location is an obstacle (cube, another mesh, or user)
+                if (worldPath[i][j] == 1) { //TODO: fix this if end is on an obstacle
+                    continue;
+                }
+
+                // already visited
+                if (visited[i][j] > 0) {
+                    continue;
+                }
+                // add this node to queue
+                Node* neighbour = newNode(i, j);
+
+                visited[i][j] = visited[currentNode->x][currentNode->y] + 1;
+                followPath[i][j] = currentNodeAsParent;
+
+                if (nodesEqual(neighbour, end)) {
+                    endReached = true;
+                    free(neighbour);
+                    break;
+                }
+                queuePush(queue, neighbour);
+            }
+            if (endReached) {
+                break;
+            }
+        }
+        if (endReached) {
+            break;
+        }
+        queuePop(queue);
+    }
+    freeQueue(queue);
+
+    Node* node = end;
+    Node* tmp;
+    int x, y;
+    x = y = 0;
+    // traverse parents along path to find next step
+    while (node != NULL) {
+        visited[node->x][node->y] = -1;
+        node = followPath[node->x][node->y];
+        if (node != NULL) {
+            tmp = followPath[node->x][node->y];
+        }
+        if (node != NULL && tmp != NULL) {
+            x = node->x;
+            y = node->y;
+        }
+    }
+
+    freeQueue(path);
+    free(start);
+    free(end);
+    if (endReached) {
+        nextStep.pathFound = true;
+        nextStep.x = x;
+        nextStep.y = y;
+    } else {
+        nextStep.pathFound = false;
+    }
+    return nextStep;
 }
