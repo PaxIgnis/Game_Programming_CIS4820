@@ -292,6 +292,28 @@ bool isUserInRoom(level* currentLevel, int room) {
 }
 
 
+
+/*
+ * Function: currentRoom(level* currentLevel, int x, int y, int z)
+ * -------------------
+ *
+ * Returns the room # that the coordinates are in, or -1 if they are not in a room.
+ *
+ */
+int currentRoom(level* currentLevel, int x, int y, int z) {
+    for (int i = 0; i < 9; i++) {
+        if (x <= (currentLevel->roomSizes[i][0] + currentLevel->startingPoints[i][0]) && x >= (currentLevel->startingPoints[i][0]) &&
+            z <= (currentLevel->roomSizes[i][1] + currentLevel->startingPoints[i][1]) && z >= (currentLevel->startingPoints[i][1])) {
+            return i;
+        }
+    }
+    
+    return -1;
+}
+
+
+
+
 /**
  * Function: pickDestination(level* currentLevel, int meshID)
  * -------------------
@@ -1216,7 +1238,8 @@ void drawFogMap(level* currentLevel) {
             if (isMeshVisible(i) == 1 || currentLevel->meshCurrentState[i] == FOLLOWING) {
                 getMeshLocation(i, &x, &y, &z);
                 // only draw if mesh is not in fog
-                if (currentLevel->visitedWorld[(int)floor(x)][(int)floor(z)] == 1) {
+                int room = currentRoom(currentLevel, floor(x), floor(y), floor(z));
+                if (currentLevel->visitedWorld[(int)floor(x)][(int)floor(z)] == 1 || (room != -1 && currentLevel->visitedRooms[room] == 1)) {
                     int meshType = getMeshNumber(i);
                     if (meshType == CACTUS) {
                         set2Dcolour(darkGreen);

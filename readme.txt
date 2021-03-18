@@ -1,7 +1,48 @@
 *** BEGIN ***
 
 Student: Hendrik van der Meijden
-Game Programming Assignment 3
+Game Programming Assignment 4
+
+
+----
+Assignment 4 Specific Notes
+----
+
+If the lag is too much, press '9'. (More info in A3 Notes below)
+
+Meshes are identified on the maps as:
+	Plant: light green coloured block
+	Bat: yellow block
+	Fish: orange block
+
+The regular map always shows the locations of all of the meshes while they are active.
+The fog of war map only shows meshes which satisfy these requirements:
+	1. Are not inside the fog (i.e. in a location the user has visited).
+	2. Are inside the players viewbox, or are actively chasing the user.
+	3. Are active.
+
+The Mobs follow all of the specifications laid out in the A4 spec and the Professors office hours.
+
+Mobs move diagonally and vertically/horizontally. They can attack the player in these 8 directions if 
+they are adjacent. The player can also move in these 8 directions, but usually when they move in the diagonal
+direction they are stepping over two cubes, so after they step on the first one, but before they step on the second one,
+the mobs will get a turn, then they will complete their diagonal turn, and then the mobs will get their second turn.
+
+Meshes can move diagonally between two cubes, as specified by the Prof.
+When the mesh attacks it is considered a turn, as specified by the Prof.
+
+When the player attacks a mesh, and hits it, the player will not move into that new cube as the attack was counted as a turn (as
+specified by the Prof).
+
+Each mesh types has a 1/3 chance of being spawned in a room.
+
+After a player leaves the dungeon level and then returns, the meshes will resume their previous locations and states, thus they will
+resume chasing the player if that was what they were doing previously.
+
+A breadth first search was implemented for pathfinding. This is used when a mesh wants to find the shortest path to a location.
+
+
+
 
 ----
 Assignment 3 Specific Notes
@@ -42,7 +83,6 @@ The regular map for the dungeon level shows:
 		but the total distance is not as long as the mobs visibility checking distance.
 	- The white block is the down teleportation stairs.
 	- The blue blocks are the randomly placed single blocks
-	- The yellow blocks are the mobs
 	- The large black blocks are the rooms
 	- The red is corridors.
 
@@ -66,7 +106,7 @@ Textures have been used for all cubes except the teleportation (grey and white) 
 Only one additional texture was added, it was a darker version of the lava.
 Prof said it was fine too use different textures for the different outdoor levels, so lava was ok for the lowest level.
 
-4. Animated Mesh Movement
+4. Animated Mesh Movement (deprecated)
 ---------------
 
 One mesh is placed inside each room in the dungeon level. The type of mesh is randonly selected.
