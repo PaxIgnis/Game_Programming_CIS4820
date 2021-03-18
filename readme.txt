@@ -41,7 +41,10 @@ resume chasing the player if that was what they were doing previously.
 
 A breadth first search was implemented for pathfinding. This is used when a mesh wants to find the shortest path to a location.
 
-
+Build Instructions:
+type: make
+type: ./a1
+to clean type: make clean
 
 
 ----
