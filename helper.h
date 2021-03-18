@@ -122,7 +122,7 @@ void meshVisibilityDetection(level* currentLevel);
 void runMeshTurn(level* currentLevel, int action, int meshId);
 void runPlantFSA(level* currentLevel, int meshId);
 void runRandomSearchFSA(level* currentLevel, int meshID);
-void runResponsiveFSA(level* currentLevel);
+void runResponsiveFSA(level* currentLevel, int meshID);
 void countUserTurn(level* currentLevel);
 void saveLevel(level* currentLevel);
 void setColors();

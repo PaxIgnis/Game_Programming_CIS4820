@@ -271,6 +271,26 @@ bool checkIfEmpty(level* currentLevel, int x, int y, int z) {
     return true;
 }
 
+/*
+ * Function: isUserInRoom(level* currentLevel, int room)
+ * -------------------
+ *
+ * Checks if user is in specified room
+ *
+ */
+bool isUserInRoom(level* currentLevel, int room) {
+    float x, y, z;
+    getViewPosition(&x, &y, &z);
+    x = -x;
+    y = -y;
+    z = -z;
+    if (floor(x) <= (currentLevel->roomSizes[room][0] + currentLevel->startingPoints[room][0]) && floor(x) >= (currentLevel->startingPoints[room][0]) &&
+        floor(z) <= (currentLevel->roomSizes[room][1] + currentLevel->startingPoints[room][1]) && floor(z) >= (currentLevel->startingPoints[room][1])) {
+        return true;
+    }
+    return false;
+}
+
 
 /**
  * Function: pickDestination(level* currentLevel, int meshID)
@@ -291,6 +311,68 @@ void pickDestination(level* currentLevel, int meshID) {
     } while (!checkIfEmpty(currentLevel, x, 26, z) && !checkIfAdjacentMesh(meshID, x, z));
     currentLevel->meshSearchDest[meshID][0] = x;
     currentLevel->meshSearchDest[meshID][1] = z;
+}
+
+/**
+ * Function: pickDestinationInRoom(level* currentLevel, int meshID, int room)
+ * -------------------
+ *
+ * pick a location in the selected room and make that the next destination for the
+ * selected meshID (sets the coordinates into the currentLevel object)
+ *
+ */
+void pickDestinationInRoom(level* currentLevel, int meshID, int room) {
+    int x, z;
+    do {
+        x = (rand() % (currentLevel->roomSizes[room][0] + currentLevel->startingPoints[room][0] - 4 -
+            (currentLevel->startingPoints[room][0] + 2) + 1)) + currentLevel->startingPoints[room][0] + 2;
+        z = (rand() % (currentLevel->roomSizes[room][1] + currentLevel->startingPoints[room][1] - 4 -
+            (currentLevel->startingPoints[room][1] + 2) + 1)) + currentLevel->startingPoints[room][1] + 2;
+    } while (!checkIfEmpty(currentLevel, x, 26, z) && !checkIfAdjacentMesh(meshID, x, z));
+    currentLevel->meshSearchDest[meshID][0] = x;
+    currentLevel->meshSearchDest[meshID][1] = z;
+}
+
+/**
+ * Function: moveTowardsPlayer(level* currentLevel, int meshID)
+ * -------------------
+ *
+ * pick a location adjacent to the player and make that the next destination for the
+ * selected meshID (sets the coordinates into the currentLevel object). Then move
+ * the mesh one step towards that location.
+ *
+ * return true if the mesh was moved
+ * return false if the mesh didn't move
+ *
+ */
+bool moveTowardsPlayer(level* currentLevel, int meshID) {
+    Path nextStep;
+    nextStep.pathFound = false;
+    float x, y, z;
+    getViewPosition(&x, &y, &z);
+    int userX = floor(-x);
+    int userY = floor(-y);
+    int userZ = floor(-z);
+    for (int i = userX - 1; i <= userX + 1; i++) {
+        for (int j = userZ - 1; j <= userZ + 1; j++) {
+            if (checkIfEmpty(currentLevel, i, 26, j)) {
+                currentLevel->meshSearchDest[meshID][0] = i;
+                currentLevel->meshSearchDest[meshID][1] = j;
+                // find a path to the destination
+                getMeshLocation(meshID, &x, &y, &z);
+                x = x - 0.5;
+                z = z - 0.5;
+                nextStep = bfs(floor(x), floor(z), floor(i), floor(j), currentLevel, nextStep);
+                // if path exists then move towards it and return success
+                if (nextStep.pathFound == true && !(nextStep.x == 0 && nextStep.y == 0)) {
+                    // move mesh single step along path
+                    setTranslateMesh(meshID, nextStep.x + 0.5, y, nextStep.y + 0.5);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 
@@ -350,7 +432,7 @@ void runRandomSearchFSA(level* currentLevel, int meshID) {
             pickDestination(currentLevel, meshID);
         }
         // find a path to the destination
-        while (nextStep.pathFound == false) {
+        while (nextStep.pathFound == false || (nextStep.x == 0 && nextStep.y == 0)) {
             getMeshLocation(meshID, &x, &y, &z);
             x = x - 0.5;
             z = z - 0.5;
@@ -358,7 +440,7 @@ void runRandomSearchFSA(level* currentLevel, int meshID) {
             int z2 = currentLevel->meshSearchDest[meshID][1];
 
             nextStep = bfs(floor(x), floor(z), floor(x2), floor(z2), currentLevel, nextStep);
-            if (nextStep.pathFound == false) {
+            if (nextStep.pathFound == false || (nextStep.x == 0 && nextStep.y == 0)) {
                 pickDestination(currentLevel, meshID);
             }
         }
@@ -377,13 +459,32 @@ void runRandomSearchFSA(level* currentLevel, int meshID) {
             getViewPosition(&userX, &userY, &userZ);
             nextStep = bfs(floor(x), floor(z), floor(-userX), floor(-userZ), currentLevel, nextStep);
             // if path exists
-            if (nextStep.pathFound) {
+            if (nextStep.pathFound && !(nextStep.x == 0 && nextStep.y == 0)) {
                 // move mesh single step along path
                 setTranslateMesh(meshID, nextStep.x + 0.5, y, nextStep.y + 0.5);
             } else {
-                // do nothing
-                // TODO: should do something, this case is when user is on a block or
-                //       when no path to the user exists (i.e. blocked off in a room)
+                // path doesn't exist to player
+                // first try moving towards a location adjacent to the player
+                if (!moveTowardsPlayer(currentLevel, meshID)) {
+                    // since there is no adjacent location to the player that the mesh
+                    // can move to, it will just move around the room until a path exists
+                    pickDestinationInRoom(currentLevel, meshID, meshID);
+                    // find a path to the new destination
+                    while (nextStep.pathFound == false || (nextStep.x == 0 && nextStep.y == 0)) {
+                        getMeshLocation(meshID, &x, &y, &z);
+                        x = x - 0.5;
+                        z = z - 0.5;
+                        int x2 = currentLevel->meshSearchDest[meshID][0];
+                        int z2 = currentLevel->meshSearchDest[meshID][1];
+
+                        nextStep = bfs(floor(x), floor(z), floor(x2), floor(z2), currentLevel, nextStep);
+                        if (nextStep.pathFound == false || (nextStep.x == 0 && nextStep.y == 0)) {
+                            pickDestinationInRoom(currentLevel, meshID, meshID);
+                        }
+                    }
+                    // move mesh single step along path
+                    setTranslateMesh(meshID, nextStep.x + 0.5, y, nextStep.y + 0.5);
+                }
             }
         }
     }
@@ -397,8 +498,86 @@ void runRandomSearchFSA(level* currentLevel, int meshID) {
  * Handles the processing for the responsive (fish) FSA
  *
  */
-void runResponsiveFSA(level* currentLevel) {
+void runResponsiveFSA(level* currentLevel, int meshID) {
+    int event, state;
+    float x, y, z, userX, userY, userZ;
+    Path nextStep;
+    nextStep.pathFound = false;
 
+    if (isUserInRoom(currentLevel, meshID)) {
+        event = INROOM;
+    } else {
+        event = NOTINROOM;
+    }
+    state = responsiveStates[event][currentLevel->meshCurrentState[meshID]];
+    currentLevel->meshCurrentState[meshID] = state;
+    // Waiting means that the mesh is just moving around in the room
+    if (state == WAITING) {
+        // if the destination has not yet been selected
+        if (currentLevel->meshSearchDest[meshID][0] == -1) {
+            pickDestinationInRoom(currentLevel, meshID, meshID);
+        }
+        // check if the mesh has made it to the final destination
+        if (checkIfAdjacentMesh(meshID, currentLevel->meshSearchDest[meshID][0], currentLevel->meshSearchDest[meshID][1])) {
+            pickDestinationInRoom(currentLevel, meshID, meshID);
+        }
+        // find a path to the destination
+        while (nextStep.pathFound == false || (nextStep.x == 0 && nextStep.y == 0)) {
+            getMeshLocation(meshID, &x, &y, &z);
+            x = x - 0.5;
+            z = z - 0.5;
+            int x2 = currentLevel->meshSearchDest[meshID][0];
+            int z2 = currentLevel->meshSearchDest[meshID][1];
+
+            nextStep = bfs(floor(x), floor(z), floor(x2), floor(z2), currentLevel, nextStep);
+            if (nextStep.pathFound == false || (nextStep.x == 0 && nextStep.y == 0)) {
+                pickDestinationInRoom(currentLevel, meshID, meshID);
+            }
+        }
+        // move mesh single step along path
+        setTranslateMesh(meshID, nextStep.x + 0.5, y, nextStep.y + 0.5);
+    } else if (state == FOLLOWING) {
+        // Following means the mesh is actively following the user
+        // first check if user is adjacent
+        if (checkIfAdjacentUser(meshID)) {
+            attackPlayer(meshID);
+        } else {
+            // find path to user
+            getMeshLocation(meshID, &x, &y, &z);
+            x = x - 0.5;
+            z = z - 0.5;
+            getViewPosition(&userX, &userY, &userZ);
+            nextStep = bfs(floor(x), floor(z), floor(-userX), floor(-userZ), currentLevel, nextStep);
+            // if path exists
+            if (nextStep.pathFound && !(nextStep.x == 0 && nextStep.y == 0)) {
+                // move mesh single step along path
+                setTranslateMesh(meshID, nextStep.x + 0.5, y, nextStep.y + 0.5);
+            } else {
+                // path doesn't exist to player
+                // first try moving towards a location adjacent to the player
+                if (!moveTowardsPlayer(currentLevel, meshID)) {
+                    // since there is no adjacent location to the player that the mesh
+                    // can move to, it will just move around the room until a path exists
+                    pickDestinationInRoom(currentLevel, meshID, meshID);
+                    // find a path to the new destination
+                    while (nextStep.pathFound == false || (nextStep.x == 0 && nextStep.y == 0)) {
+                        getMeshLocation(meshID, &x, &y, &z);
+                        x = x - 0.5;
+                        z = z - 0.5;
+                        int x2 = currentLevel->meshSearchDest[meshID][0];
+                        int z2 = currentLevel->meshSearchDest[meshID][1];
+
+                        nextStep = bfs(floor(x), floor(z), floor(x2), floor(z2), currentLevel, nextStep);
+                        if (nextStep.pathFound == false || (nextStep.x == 0 && nextStep.y == 0)) {
+                            pickDestinationInRoom(currentLevel, meshID, meshID);
+                        }
+                    }
+                    // move mesh single step along path
+                    setTranslateMesh(meshID, nextStep.x + 0.5, y, nextStep.y + 0.5);
+                }
+            }
+        }
+    }
 }
 
 
@@ -420,7 +599,7 @@ void runMeshTurn(level* currentLevel, int action, int meshId) {
         // each mesh gets a turn
         for (int i = 0; i < MESHCOUNT; i++) {
             if (getMeshNumber(i) == FISH && currentLevel->meshCurrentState[i] != INACTIVE) {
-
+                runResponsiveFSA(currentLevel, i);
             } else if (getMeshNumber(i) == BAT && currentLevel->meshCurrentState[i] != INACTIVE) {
                 runRandomSearchFSA(currentLevel, i);
             } else if (getMeshNumber(i) == CACTUS && currentLevel->meshCurrentState[i] != INACTIVE) {
@@ -855,10 +1034,9 @@ void drawMap(level* currentLevel) {
             }
         }
         // draw meshes
-        for (int i = 0; i < 9; i++) {
+        for (int i = 0; i < MESHCOUNT; i++) {
             glClear(GL_DEPTH_BUFFER_BIT);
             // don't draw mesh if it is hidden
-            // if (isMeshVisible(i) == 1) {
             if (currentLevel->meshCurrentState[i] != INACTIVE) {
                 getMeshLocation(i, &x, &y, &z);
                 int meshType = getMeshNumber(i);
@@ -874,7 +1052,6 @@ void drawMap(level* currentLevel) {
                     (int)((((x)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
                     (int)(((z + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
                     (int)(((x + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
-                // }
             }
         }
     } else if (currentLevel->worldType == OUTDOOR) {
@@ -956,7 +1133,11 @@ void drawFogMap(level* currentLevel) {
     GLfloat white[] = { 1, 1, 1, .98 };
     GLfloat grey[] = { 0.3, 0.3, 0.3, .98 };
     GLfloat lightGreen[] = { 0.0, 0.7, 0.0, .2 };
+    //meshes
     GLfloat yellow[] = { 0.8, 0.8, 0.1, .98 };
+    GLfloat lightOrange[] = { 0.95, 0.38, 0, .98 };
+    GLfloat darkGreen[] = { 0.11, 0.36, .18, .98 };
+
     GLfloat orange[] = { 0.95, 0.35, 0.01, .98 };
     GLfloat snow[] = { 0.9, 0.9, 0.9, .98 };
     GLfloat brown[] = { 0.25, 0.08, 0.1, .98 };
@@ -1012,15 +1193,6 @@ void drawFogMap(level* currentLevel) {
                     }
 
                 }
-                // don't draw mesh if it is hidden
-                if (isMeshVisible(i) == 1) {
-                    getMeshLocation(i, &x, &y, &z);
-                    set2Dcolour(yellow);
-                    draw2Dbox((int)((((z)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
-                        (int)((((x)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
-                        (int)(((z + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
-                        (int)(((x + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
-                }
             }
         }
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -1035,6 +1207,28 @@ void drawFogMap(level* currentLevel) {
                             (int)(((j + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
                             (int)(((i + 1) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
                     }
+                }
+            }
+        }
+        glClear(GL_DEPTH_BUFFER_BIT);
+        for (int i = 0; i < MESHCOUNT; i++) {
+            // draw mesh if it is chasing player, or in the viewbox
+            if (isMeshVisible(i) == 1 || currentLevel->meshCurrentState[i] == FOLLOWING) {
+                getMeshLocation(i, &x, &y, &z);
+                // only draw if mesh is not in fog
+                if (currentLevel->visitedWorld[(int)floor(x)][(int)floor(z)] == 1) {
+                    int meshType = getMeshNumber(i);
+                    if (meshType == CACTUS) {
+                        set2Dcolour(darkGreen);
+                    } else if (meshType == FISH) {
+                        set2Dcolour(lightOrange);
+                    } else {
+                        set2Dcolour(yellow);
+                    }
+                    draw2Dbox((int)((((z)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)((((x)-.5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)),
+                        (int)(((z + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)) + (screenWidth - screenHeight) / 2,
+                        (int)(((x + .5) * (double)(screenHeight * 0.009)) + (double)(screenHeight * 0.05)));
                 }
             }
         }
@@ -1855,7 +2049,7 @@ void createDungeonLevel(level* currentLevel, int direction) {
 
     // create and places Meshes
     // loop through 9 rooms
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < MESHCOUNT; i++) {
         // select random starting location in room
         int x, z;
         float y;
@@ -1866,9 +2060,9 @@ void createDungeonLevel(level* currentLevel, int direction) {
             z = (rand() % (roomSizes[i][1] + startingPoints[i][1] - 2 - (startingPoints[i][1] + 2) + 1)) + startingPoints[i][1] + 2;
         } while (world[x][26][z] != 0);
 
-        // pick random mesh
+        // pick random mesh (with 33.3% chance for each mesh)
         int type = (rand() % 3) + 1;
-        // int type = BAT;
+        // int type = FISH;
 
         //draw mesh
         // mesh id matches which room they are placed in (i.e. mesh 1 is in room 1)
@@ -2686,7 +2880,7 @@ Path bfs(int startX, int startY, int endX, int endY, level* currentLevel, Path n
                 }
 
                 // check if location is an obstacle (cube, another mesh, or user)
-                if (worldPath[i][j] == 1) { //TODO: fix this if end is on an obstacle
+                if (worldPath[i][j] == 1) { // skips end if it is on an obstacle
                     continue;
                 }
 
@@ -2704,8 +2898,10 @@ Path bfs(int startX, int startY, int endX, int endY, level* currentLevel, Path n
                     endReached = true;
                     free(neighbour);
                     break;
+                } else {
+                    queuePush(queue, neighbour);
                 }
-                queuePush(queue, neighbour);
+
             }
             if (endReached) {
                 break;
